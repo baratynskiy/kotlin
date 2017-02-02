@@ -67,7 +67,8 @@ class ShortenReferences(val options: (KtElement) -> Options = { Options.DEFAULT 
         private fun DeclarationDescriptor.asString()
                 = DescriptorRenderer.FQ_NAMES_IN_TYPES.render(this)
 
-        private fun KtReferenceExpression.targets(context: BindingContext) = getImportableTargets(context)
+        private fun KtReferenceExpression.targets(context: BindingContext) =
+                getImportableTargets(context).map { (it as? TypeAliasDescriptor)?.classDescriptor ?: it }
 
         private fun mayImport(descriptor: DeclarationDescriptor, file: KtFile): Boolean {
             return descriptor.canBeReferencedViaImport()
