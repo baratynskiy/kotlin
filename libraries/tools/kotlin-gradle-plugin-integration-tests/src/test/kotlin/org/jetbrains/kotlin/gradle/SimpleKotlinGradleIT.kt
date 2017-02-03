@@ -35,7 +35,8 @@ class SimpleKotlinGradleIT : BaseGradleIT() {
         project.build("build") {
             assertSuccessful()
             assertContains(":compileKotlin")
-            assertNotContains("w:")
+            assertNotContains("""w: [^\r\n]*?suppressWarnings\\src\\helloWorld\.kt: \(5, 9\): Parameter 'p' is never used""".toRegex())
+            assertNotContains("""w: [^\r\n]*?suppressWarnings\\src\\helloWorld\.kt: \(5, 9\): Redundant '?'""".toRegex())
         }
     }
 
