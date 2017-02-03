@@ -104,21 +104,33 @@ val Field.kotlinProperty: KProperty<*>?
     }
 
 
-private fun Member.getKPackage(): KDeclarationContainer? {
-    // TODO: support multifile classes
-    val header = ReflectKotlinClass.create(declaringClass)?.classHeader
-    if (header != null && header.kind == KotlinClassHeader.Kind.FILE_FACADE && header.metadataVersion.isCompatible()) {
-        // TODO: avoid reading and parsing metadata twice (here and later in KPackageImpl#descriptor)
-        val (nameResolver, proto) = JvmProtoBufUtil.readPackageDataFrom(header.data!!, header.strings!!)
-        val moduleName =
-                if (proto.hasExtension(JvmProtoBuf.packageModuleName))
-                    nameResolver.getString(proto.getExtension(JvmProtoBuf.packageModuleName))
-                else JvmAbi.DEFAULT_MODULE_NAME
-        return Reflection.getOrCreateKotlinPackage(declaringClass, moduleName)
-    }
+private fun Member.getKPackage(): KDeclarationContainer? =
+        ReflectKotlinClass.create(declaringClass)?.moduleName?.let { moduleName ->
+            Reflection.getOrCreateKotlinPackage(declaringClass, moduleName)
+        }
 
-    return null
-}
+internal val ReflectKotlinClass.moduleName: String?
+    get() {
+        val header = classHeader
+        if (!header.metadataVersion.isCompatible()) return null
+
+        when (header.kind) {
+            KotlinClassHeader.Kind.FILE_FACADE, KotlinClassHeader.Kind.MULTIFILE_CLASS_PART -> {
+                // TODO: avoid reading and parsing metadata twice (here and later in KPackageImpl#descriptor)
+                val (nameResolver, proto) = JvmProtoBufUtil.readPackageDataFrom(header.data!!, header.strings!!)
+                val moduleName =
+                        if (proto.hasExtension(JvmProtoBuf.packageModuleName))
+                            nameResolver.getString(proto.getExtension(JvmProtoBuf.packageModuleName))
+                        else JvmAbi.DEFAULT_MODULE_NAME
+                return moduleName
+            }
+            KotlinClassHeader.Kind.MULTIFILE_CLASS -> {
+                val partName = header.multifilePartNames.firstOrNull() ?: return null
+                return ReflectKotlinClass.create(klass.classLoader.loadClass(partName.replace('/', '.')))?.moduleName
+            }
+            else -> return null
+        }
+    }
 
 /**
  * Returns a [KFunction] instance corresponding to the given Java [Method] instance,

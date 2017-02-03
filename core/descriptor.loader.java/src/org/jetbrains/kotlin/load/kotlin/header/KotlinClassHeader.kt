@@ -57,6 +57,9 @@ class KotlinClassHeader(
     val multifileClassName: String?
         get() = if (kind == Kind.MULTIFILE_CLASS_PART) extraString else null
 
+    val multifilePartNames: List<String>
+        get() = data?.takeIf { kind == Kind.MULTIFILE_CLASS }?.asList().orEmpty()
+
     // TODO: use in incremental compilation
     val multifileClassKind: MultifileClassKind?
         get() = if (kind == Kind.MULTIFILE_CLASS || kind == Kind.MULTIFILE_CLASS_PART) {

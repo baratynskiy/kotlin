@@ -38,7 +38,10 @@ import org.jetbrains.kotlin.serialization.deserialization.DeserializationConfigu
 import org.jetbrains.kotlin.serialization.deserialization.NotFoundClasses
 import org.jetbrains.kotlin.storage.LockBasedStorageManager
 
-class RuntimeModuleData private constructor(val deserialization: DeserializationComponents, val packageFacadeProvider: RuntimePackagePartProvider) {
+class RuntimeModuleData private constructor(
+        val deserialization: DeserializationComponents,
+        val packagePartProvider: RuntimePackagePartProvider
+) {
     val module: ModuleDescriptor get() = deserialization.moduleDescriptor
 
     companion object {
