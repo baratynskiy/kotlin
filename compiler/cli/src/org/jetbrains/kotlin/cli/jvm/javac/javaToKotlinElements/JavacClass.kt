@@ -16,11 +16,17 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
 
+import com.intellij.psi.CommonClassNames
+import org.jetbrains.kotlin.cli.jvm.javac.JavaWithKotlinCompiler
 import org.jetbrains.kotlin.load.java.structure.*
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.SpecialNames
 import javax.lang.model.element.ElementKind
+import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
+import javax.lang.model.element.VariableElement
+import javax.lang.model.type.NoType
 import javax.lang.model.type.TypeKind
 
 class JavacClass<T : TypeElement>(element: T) : JavacClassifier<TypeElement>(element), JavaClass {
@@ -36,16 +42,24 @@ class JavacClass<T : TypeElement>(element: T) : JavacClassifier<TypeElement>(ele
     override val visibility = element.getVisibility()
 
     override val typeParameters: List<JavaTypeParameter>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = element.typeParameters.map { JavacTypeParameter(it) }
 
     override val fqName = FqName(element.qualifiedName.toString())
 
     override val supertypes: Collection<JavaClassifierType>
-            get() = TODO()
+        get() = element.interfaces.toMutableList().apply {
+            if (element.superclass !is NoType) add(element.superclass)
+
+            val hasObject = !none { it.toString() == CommonClassNames.JAVA_LANG_OBJECT }
+            if (!hasObject && element.toString() != CommonClassNames.JAVA_LANG_OBJECT) {
+                add(JavaWithKotlinCompiler.elements.getTypeElement(CommonClassNames.JAVA_LANG_OBJECT).asType())
+            }
+        }.map { JavacClassifierType(it) }
+
 
     override val innerClasses: Collection<JavaClass>
         get() = element.enclosedElements
-                .filter{ it.asType().kind == TypeKind.DECLARED }
+                .filter { it.asType().kind == TypeKind.DECLARED }
                 .filterIsInstance(TypeElement::class.java)
                 .map { JavacClass(it) }
 
@@ -63,12 +77,19 @@ class JavacClass<T : TypeElement>(element: T) : JavacClassifier<TypeElement>(ele
     override val lightClassOriginKind = null
 
     override val methods: Collection<JavaMethod>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = element.enclosedElements
+                .filter { it.kind == ElementKind.METHOD }
+                .map { JavacMethod(it as ExecutableElement) }
 
     override val fields: Collection<JavaField>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = element.enclosedElements
+                .filter{ it.kind.isField }
+                .filter{ Name.isValidIdentifier(it.simpleName.toString()) }
+                .map { JavacField(it as VariableElement) }
 
     override val constructors: Collection<JavaConstructor>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = element.enclosedElements
+                .filter { it.kind == ElementKind.CONSTRUCTOR }
+                .map { JavacConstructor(it as ExecutableElement) }
 
 }
