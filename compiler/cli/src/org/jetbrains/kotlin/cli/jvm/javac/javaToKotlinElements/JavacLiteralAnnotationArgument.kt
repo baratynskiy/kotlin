@@ -16,19 +16,7 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
 
-import org.jetbrains.kotlin.load.java.structure.JavaElement
-import javax.lang.model.element.Element
+import org.jetbrains.kotlin.load.java.structure.JavaLiteralAnnotationArgument
+import org.jetbrains.kotlin.name.Name
 
-open class JavacElement<out T : Element>(val element: T) : JavaElement {
-
-    override fun equals(other: Any?): Boolean {
-        if (other !is JavacElement<*>) return false
-
-        return element == other.element
-    }
-
-    override fun hashCode() = element.hashCode()
-
-    override fun toString() = element.simpleName.toString()
-
-}
+class JavacLiteralAnnotationArgument(override val value : Any, override val name : Name) : JavaLiteralAnnotationArgument

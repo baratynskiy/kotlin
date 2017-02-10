@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
 
+import org.jetbrains.kotlin.cli.jvm.javac.JavaWithKotlinCompiler
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaMember
@@ -37,7 +38,7 @@ abstract class JavacMember<out T : Element>(element: T) : JavacElement<T>(elemen
     override val name
             get() = Name.identifier(element.simpleName.toString())
 
-    override val isDeprecatedInJavaDoc = false
+    override val isDeprecatedInJavaDoc = JavaWithKotlinCompiler.elements.isDeprecated(element)
 
     override val isAbstract = element.isAbstract
 

@@ -16,19 +16,13 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
 
-import org.jetbrains.kotlin.load.java.structure.JavaElement
-import javax.lang.model.element.Element
+import org.jetbrains.kotlin.load.java.structure.JavaEnumValueAnnotationArgument
+import org.jetbrains.kotlin.name.FqName
+import javax.lang.model.element.VariableElement
 
-open class JavacElement<out T : Element>(val element: T) : JavaElement {
+class JavacReferenceAnnotationArgument(val element: VariableElement) : JavacAnnotationArgument(FqName(element.simpleName.toString())),
+        JavaEnumValueAnnotationArgument {
 
-    override fun equals(other: Any?): Boolean {
-        if (other !is JavacElement<*>) return false
-
-        return element == other.element
-    }
-
-    override fun hashCode() = element.hashCode()
-
-    override fun toString() = element.simpleName.toString()
+    override fun resolve() = JavacField(element)
 
 }

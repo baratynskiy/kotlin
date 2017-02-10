@@ -23,14 +23,21 @@ import com.sun.tools.javac.model.JavacTypes
 import com.sun.tools.javac.util.Context
 import com.sun.tools.javac.util.List
 import org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements.JavacClass
+import javax.lang.model.element.TypeElement
+import javax.lang.model.util.Elements
+import javax.lang.model.util.Types
 import javax.tools.JavaFileObject
 
 object JavaWithKotlinCompiler {
 
     private val context = Context()
     private val symtab by lazy { Symtab.instance(context) }
-    val elements by lazy { JavacElements.instance(context) }
-    val types by lazy { JavacTypes.instance(context) }
+    val elements: Elements by lazy { JavacElements.instance(context) }
+    val types: Types by lazy { JavacTypes.instance(context) }
+
+    fun findType(name: String): TypeElement? = symtab.classes
+            .filter { (_,v)  -> v.fullname.toString() == name }
+            .values.firstOrNull()
 
     fun compile() {
         val javac = JavaCompiler(context)

@@ -16,19 +16,12 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
 
-import org.jetbrains.kotlin.load.java.structure.JavaElement
-import javax.lang.model.element.Element
+import org.jetbrains.kotlin.cli.jvm.javac.JavaWithKotlinCompiler
+import org.jetbrains.kotlin.load.java.structure.JavaClassObjectAnnotationArgument
+import org.jetbrains.kotlin.name.Name
 
-open class JavacElement<out T : Element>(val element: T) : JavaElement {
+class JavacClassObjectAnnotationArgument(val javaClass : Class<*>, override val name : Name) : JavaClassObjectAnnotationArgument {
 
-    override fun equals(other: Any?): Boolean {
-        if (other !is JavacElement<*>) return false
-
-        return element == other.element
-    }
-
-    override fun hashCode() = element.hashCode()
-
-    override fun toString() = element.simpleName.toString()
+    override fun getReferencedType() = JavacType.create(JavaWithKotlinCompiler.findType(javaClass.canonicalName)!!.asType())
 
 }

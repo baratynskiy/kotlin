@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
 
+import org.jetbrains.kotlin.cli.jvm.javac.JavaWithKotlinCompiler
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaType
 import org.jetbrains.kotlin.load.java.structure.JavaValueParameter
@@ -27,11 +28,15 @@ class JavacValueParameter<out T : VariableElement>(element: T, name : String,
                                                    override val isVararg : Boolean) : JavacElement<T>(element), JavaValueParameter {
 
     override val annotations: Collection<JavaAnnotation>
-        get() = emptyList()
+        get() = element.annotationMirrors
+                .map(::JavacAnnotation)
 
-    override fun findAnnotation(fqName: FqName) = null
+    override fun findAnnotation(fqName: FqName): JavaAnnotation? = element.annotationMirrors
+            .filter { it.toString() == fqName.asString() }
+            .firstOrNull()
+            ?.let(::JavacAnnotation)
 
-    override val isDeprecatedInJavaDoc = false
+    override val isDeprecatedInJavaDoc = JavaWithKotlinCompiler.elements.isDeprecated(element)
 
     override val name = Name.identifier(name)
 

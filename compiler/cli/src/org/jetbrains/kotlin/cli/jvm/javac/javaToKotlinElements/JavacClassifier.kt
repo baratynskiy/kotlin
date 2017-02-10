@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
 
+import org.jetbrains.kotlin.cli.jvm.javac.JavaWithKotlinCompiler
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationOwner
 import org.jetbrains.kotlin.load.java.structure.JavaClassifier
@@ -24,10 +25,15 @@ import javax.lang.model.element.Element
 
 abstract class JavacClassifier<out T : Element>(element: T) : JavacElement<T>(element), JavaClassifier, JavaAnnotationOwner {
 
-    override val annotations: Collection<JavaAnnotation> = emptyList()
+    override val annotations: Collection<JavaAnnotation>
+            get() = element.annotationMirrors
+                    .map(::JavacAnnotation)
 
-    override fun findAnnotation(fqName: FqName): JavaAnnotation? = null
+    override fun findAnnotation(fqName: FqName): JavaAnnotation? = element.annotationMirrors
+            .filter { it.toString() == fqName.asString() }
+            .firstOrNull()
+            ?.let(::JavacAnnotation)
 
-    override val isDeprecatedInJavaDoc: Boolean = false
+    override val isDeprecatedInJavaDoc = JavaWithKotlinCompiler.elements.isDeprecated(element)
 
 }

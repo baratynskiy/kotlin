@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
 
+import org.jetbrains.kotlin.cli.jvm.javac.JavaWithKotlinCompiler
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationOwner
 import org.jetbrains.kotlin.load.java.structure.JavaType
@@ -37,8 +38,19 @@ open class JavacType<out T : TypeMirror>(val typeMirror: T) : JavaType, JavaAnno
 
     override val annotations: Collection<JavaAnnotation> = emptyList()
 
+    override val isDeprecatedInJavaDoc
+            get() = JavaWithKotlinCompiler.elements.isDeprecated(JavaWithKotlinCompiler.types.asElement(typeMirror))
+
     override fun findAnnotation(fqName: FqName) = null
 
-    override val isDeprecatedInJavaDoc = false
+    override fun equals(other: Any?): Boolean {
+        if (other !is JavacType<*>) return false
+
+        return typeMirror == other.typeMirror
+    }
+
+    override fun hashCode() = typeMirror.hashCode()
+
+    override fun toString() = typeMirror.toString()
 
 }

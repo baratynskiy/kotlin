@@ -16,19 +16,13 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
 
-import org.jetbrains.kotlin.load.java.structure.JavaElement
-import javax.lang.model.element.Element
+import org.jetbrains.kotlin.load.java.structure.JavaAnnotationAsAnnotationArgument
+import org.jetbrains.kotlin.name.Name
+import javax.lang.model.element.AnnotationMirror
 
-open class JavacElement<out T : Element>(val element: T) : JavaElement {
+class JavacAnnotationAsAnnotationArgument(val mirror: AnnotationMirror,
+                                          override val name: Name) : JavaAnnotationAsAnnotationArgument {
 
-    override fun equals(other: Any?): Boolean {
-        if (other !is JavacElement<*>) return false
-
-        return element == other.element
-    }
-
-    override fun hashCode() = element.hashCode()
-
-    override fun toString() = element.simpleName.toString()
+    override fun getAnnotation() = JavacAnnotation(mirror)
 
 }
