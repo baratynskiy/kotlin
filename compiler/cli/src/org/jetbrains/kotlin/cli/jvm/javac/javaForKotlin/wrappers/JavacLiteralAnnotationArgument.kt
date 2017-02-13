@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
-import org.jetbrains.kotlin.cli.jvm.javac.JavaWithKotlinCompiler
-import org.jetbrains.kotlin.load.java.structure.JavaClassObjectAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.JavaLiteralAnnotationArgument
 import org.jetbrains.kotlin.name.Name
 
-class JavacClassObjectAnnotationArgument(val javaClass : Class<*>, override val name : Name) : JavaClassObjectAnnotationArgument {
-
-    override fun getReferencedType() = JavacType.create(JavaWithKotlinCompiler.findType(javaClass.canonicalName)!!.asType())
-
-}
+class JavacLiteralAnnotationArgument(override val value : Any, override val name : Name) : JavaLiteralAnnotationArgument

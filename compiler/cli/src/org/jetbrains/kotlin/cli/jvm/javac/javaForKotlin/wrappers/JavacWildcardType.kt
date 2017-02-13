@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
 import org.jetbrains.kotlin.load.java.structure.JavaWildcardType
 import javax.lang.model.type.TypeMirror
@@ -26,7 +26,7 @@ class JavacWildcardType<out T : TypeMirror>(typeMirror: T) : JavacType<T>(typeMi
         get() = typeMirror.let {
             val boundMirror = (it as WildcardType).extendsBound ?: it.superBound
 
-            if (boundMirror != null) JavacType.create(boundMirror) else null
+            if (boundMirror != null) create(boundMirror) else null
         }
 
     override val isExtends = (typeMirror as WildcardType).extendsBound != null

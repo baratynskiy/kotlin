@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
 import org.jetbrains.kotlin.cli.jvm.javac.JavaWithKotlinCompiler
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
-import org.jetbrains.kotlin.load.java.structure.JavaType
-import org.jetbrains.kotlin.load.java.structure.JavaValueParameter
+import org.jetbrains.kotlin.load.java.structure.JavaAnnotationOwner
+import org.jetbrains.kotlin.load.java.structure.JavaClassifier
 import org.jetbrains.kotlin.name.FqName
-import org.jetbrains.kotlin.name.Name
-import javax.lang.model.element.VariableElement
+import javax.lang.model.element.Element
 
-class JavacValueParameter<out T : VariableElement>(element: T, name : String,
-                                                   override val isVararg : Boolean) : JavacElement<T>(element), JavaValueParameter {
+abstract class JavacClassifier<out T : Element>(element: T) : JavacElement<T>(element), JavaClassifier, JavaAnnotationOwner {
 
     override val annotations: Collection<JavaAnnotation>
-        get() = element.annotationMirrors
-                .map(::JavacAnnotation)
+            get() = element.annotationMirrors
+                    .map(::JavacAnnotation)
 
     override fun findAnnotation(fqName: FqName): JavaAnnotation? = element.annotationMirrors
             .filter { it.toString() == fqName.asString() }
@@ -37,10 +35,5 @@ class JavacValueParameter<out T : VariableElement>(element: T, name : String,
             ?.let(::JavacAnnotation)
 
     override val isDeprecatedInJavaDoc = JavaWithKotlinCompiler.elements.isDeprecated(element)
-
-    override val name = Name.identifier(name)
-
-    override val type: JavaType
-        get() = JavacType.create(element.asType())
 
 }

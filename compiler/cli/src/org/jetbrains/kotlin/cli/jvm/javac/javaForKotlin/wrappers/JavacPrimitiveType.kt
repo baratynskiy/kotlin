@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
-import org.jetbrains.kotlin.load.java.structure.JavaArrayType
-import org.jetbrains.kotlin.load.java.structure.JavaType
-import javax.lang.model.type.ArrayType
+import org.jetbrains.kotlin.builtins.PrimitiveType
+import org.jetbrains.kotlin.load.java.structure.JavaPrimitiveType
+import org.jetbrains.kotlin.resolve.jvm.JvmPrimitiveType
 import javax.lang.model.type.TypeMirror
 
-class JavacArrayType<out T : TypeMirror>(typeMirror: T) : JavacType<T>(typeMirror), JavaArrayType {
+class JavacPrimitiveType<out T : TypeMirror>(typeMirror: T) : JavacType<T>(typeMirror), JavaPrimitiveType {
 
-    override val componentType
-            get() = JavacType.create((typeMirror as ArrayType).componentType)
+    override val type: PrimitiveType?
+        get() = if ("void" == typeMirror.toString()) null else JvmPrimitiveType.get(typeMirror.toString()).primitiveType
 
 }

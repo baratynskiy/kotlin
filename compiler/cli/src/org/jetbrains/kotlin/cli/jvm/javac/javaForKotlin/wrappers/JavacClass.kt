@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
 import com.intellij.psi.CommonClassNames
 import org.jetbrains.kotlin.cli.jvm.javac.JavaWithKotlinCompiler

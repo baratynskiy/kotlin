@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
-import org.jetbrains.kotlin.load.java.structure.JavaConstructor
+import org.jetbrains.kotlin.load.java.structure.*
 import javax.lang.model.element.ExecutableElement
 
-class JavacConstructor<out T : ExecutableElement>(element: T) : JavacMember<T>(element), JavaConstructor {
+class JavacMethod<out T : ExecutableElement>(element: T) : JavacMember<T>(element), JavaMethod {
 
     override val typeParameters
         get() = element.typeParameters.map { JavacTypeParameter(it) }
 
     override val valueParameters
         get() = element.valueParameters
+
+    override val returnType: JavaType
+        get() = JavacType.create(element.returnType)
+
+    override val hasAnnotationParameterDefaultValue
+        get() = element.defaultValue != null
+
 }

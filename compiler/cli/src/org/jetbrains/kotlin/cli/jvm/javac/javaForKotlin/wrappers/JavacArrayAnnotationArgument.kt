@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
-import org.jetbrains.kotlin.load.java.structure.JavaAnnotationAsAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.JavaArrayAnnotationArgument
 import org.jetbrains.kotlin.name.Name
-import javax.lang.model.element.AnnotationMirror
 
-class JavacAnnotationAsAnnotationArgument(val mirror: AnnotationMirror,
-                                          override val name: Name) : JavaAnnotationAsAnnotationArgument {
-
-    override fun getAnnotation() = JavacAnnotation(mirror)
-
+class JavacArrayAnnotationArgument(val args : List<JavaAnnotationArgument>, override val name : Name) : JavaArrayAnnotationArgument {
+    override fun getElements() : List<JavaAnnotationArgument> = args
 }

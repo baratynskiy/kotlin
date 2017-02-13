@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
-import org.jetbrains.kotlin.load.java.structure.JavaEnumValueAnnotationArgument
-import org.jetbrains.kotlin.name.FqName
-import javax.lang.model.element.VariableElement
+import org.jetbrains.kotlin.cli.jvm.javac.JavaWithKotlinCompiler
+import org.jetbrains.kotlin.load.java.structure.JavaClassObjectAnnotationArgument
+import org.jetbrains.kotlin.name.Name
 
-class JavacReferenceAnnotationArgument(val element: VariableElement) : JavacAnnotationArgument(FqName(element.simpleName.toString())),
-        JavaEnumValueAnnotationArgument {
+class JavacClassObjectAnnotationArgument(val javaClass : Class<*>, override val name : Name) : JavaClassObjectAnnotationArgument {
 
-    override fun resolve() = JavacField(element)
+    override fun getReferencedType() = JavacType.create(JavaWithKotlinCompiler.findType(javaClass.canonicalName)!!.asType())
 
 }

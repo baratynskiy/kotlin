@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
+import org.jetbrains.kotlin.load.java.structure.JavaClassifier
 import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
 import org.jetbrains.kotlin.load.java.structure.JavaType
 import javax.lang.model.element.TypeElement
+import javax.lang.model.element.TypeParameterElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
@@ -28,12 +30,12 @@ class JavacClassifierType<out T : TypeMirror>(typeMirror: T) : JavacType<T>(type
 
     override val classifier = when (typeMirror.kind) {
         TypeKind.DECLARED -> JavacClass((typeMirror as DeclaredType).asElement() as TypeElement)
-        TypeKind.TYPEVAR -> JavacTypeParameter((typeMirror as TypeVariable).asElement())
+        TypeKind.TYPEVAR -> JavacTypeParameter((typeMirror as TypeVariable).asElement() as TypeParameterElement)
         else -> null
     }
 
     override val typeArguments: List<JavaType>
-        get() = if (typeMirror.kind == TypeKind.DECLARED) (typeMirror as DeclaredType).typeArguments.map { JavacType.create(it) } else emptyList()
+        get() = if (typeMirror.kind == TypeKind.DECLARED) (typeMirror as DeclaredType).typeArguments.map { create(it) } else emptyList()
 
     override val isRaw: Boolean
         get() = when {

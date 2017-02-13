@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
-import org.jetbrains.kotlin.builtins.PrimitiveType
-import org.jetbrains.kotlin.load.java.structure.JavaPrimitiveType
-import org.jetbrains.kotlin.resolve.jvm.JvmPrimitiveType
-import javax.lang.model.type.TypeMirror
+import org.jetbrains.kotlin.load.java.structure.JavaField
+import org.jetbrains.kotlin.load.java.structure.JavaType
+import javax.lang.model.element.ElementKind
+import javax.lang.model.element.VariableElement
 
-class JavacPrimitiveType<out T : TypeMirror>(typeMirror: T) : JavacType<T>(typeMirror), JavaPrimitiveType {
+class JavacField<out T : VariableElement>(element: T) : JavacMember<T>(element), JavaField {
 
-    override val type: PrimitiveType?
-        get() = if ("void" == typeMirror.toString()) null else JvmPrimitiveType.get(typeMirror.toString()).primitiveType
+    override val isEnumEntry: Boolean
+        get() = element.kind == ElementKind.ENUM_CONSTANT
+
+    override val type: JavaType
+        get() = JavacType.create(element.asType())
 
 }

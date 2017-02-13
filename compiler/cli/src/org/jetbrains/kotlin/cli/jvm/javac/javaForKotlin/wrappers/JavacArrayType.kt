@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
-import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
-import org.jetbrains.kotlin.load.java.structure.JavaArrayAnnotationArgument
-import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.load.java.structure.JavaArrayType
+import org.jetbrains.kotlin.load.java.structure.JavaType
+import javax.lang.model.type.ArrayType
+import javax.lang.model.type.TypeMirror
 
-class JavacArrayAnnotationArgument(val args : List<JavaAnnotationArgument>, override val name : Name) : JavaArrayAnnotationArgument {
-    override fun getElements() : List<JavaAnnotationArgument> = args
+class JavacArrayType<out T : TypeMirror>(typeMirror: T) : JavacType<T>(typeMirror), JavaArrayType {
+
+    override val componentType
+            get() = create((typeMirror as ArrayType).componentType)
+
 }

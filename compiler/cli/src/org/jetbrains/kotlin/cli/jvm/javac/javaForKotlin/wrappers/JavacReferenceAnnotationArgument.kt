@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
-import org.jetbrains.kotlin.load.java.structure.JavaField
-import org.jetbrains.kotlin.load.java.structure.JavaType
-import javax.lang.model.element.ElementKind
+import org.jetbrains.kotlin.load.java.structure.JavaEnumValueAnnotationArgument
+import org.jetbrains.kotlin.name.FqName
 import javax.lang.model.element.VariableElement
 
-class JavacField<out T : VariableElement>(element: T) : JavacMember<T>(element), JavaField {
+class JavacReferenceAnnotationArgument(val element: VariableElement) : JavacAnnotationArgument(FqName(element.simpleName.toString())),
+        JavaEnumValueAnnotationArgument {
 
-    override val isEnumEntry: Boolean
-        get() = element.kind == ElementKind.ENUM_CONSTANT
-
-    override val type: JavaType
-        get() = JavacType.create(element.asType())
+    override fun resolve() = JavacField(element)
 
 }

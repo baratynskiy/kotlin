@@ -14,9 +14,21 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.cli.jvm.javac.javaToKotlinElements
+package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers
 
-import org.jetbrains.kotlin.load.java.structure.JavaLiteralAnnotationArgument
-import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.load.java.structure.JavaElement
+import javax.lang.model.element.Element
 
-class JavacLiteralAnnotationArgument(override val value : Any, override val name : Name) : JavaLiteralAnnotationArgument
+open class JavacElement<out T : Element>(val element: T) : JavaElement {
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is JavacElement<*>) return false
+
+        return element == other.element
+    }
+
+    override fun hashCode() = element.hashCode()
+
+    override fun toString() = element.simpleName.toString()
+
+}
