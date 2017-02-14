@@ -25,8 +25,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.SpecialNames
 
 class JCClass<out T : JCTree.JCClassDecl>(tree: T,
-                                          val parent: JCClass<T>?,
-                                          val packageName: String) : JCClassifier<T>(tree), JavaClass {
+                                          val treePath: List<JCTree>) : JCClassifier<T>(tree), JavaClass {
 
     override val name = SpecialNames.safeIdentifier(tree.simpleName.toString())
 
@@ -46,7 +45,9 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val typeParameters
         get() = tree.typeParameters.map(::JCTypeParameter)
 
-    override val fqName: FqName = parent?.fqName?.child(name) ?: FqName(packageName + "." + name.toString())
+    override val fqName
+        get() = treePath.reversed().joinToString(separator = ".") { (it as? JCTree.JCCompilationUnit)?.packageName?.toString() ?: (it as JCTree.JCClassDecl).name }
+                .let(::FqName)
 
     override val supertypes: Collection<JavaClassifierType>
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
@@ -54,9 +55,13 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val innerClasses
         get() = tree.members
                 .filterIsInstance(JCTree.JCClassDecl::class.java)
-                .map { JCClass(it, this, packageName) }
+                .map { JCClass(it, treePath.toMutableList().apply { add(0, it) }) }
 
-    override val outerClass = parent
+    override val outerClass
+        get() = treePath.let {
+            val newTreePath = treePath.drop(1)
+            (treePath.firstOrNull() as? JCTree.JCClassDecl)?.let { JCClass<JCTree.JCClassDecl>(it, newTreePath) }
+        }
 
     override val isInterface = tree.modifiers.flags and Flags.INTERFACE.toLong() != 0L
 

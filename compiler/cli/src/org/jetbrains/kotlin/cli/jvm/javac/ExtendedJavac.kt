@@ -19,8 +19,10 @@ package org.jetbrains.kotlin.cli.jvm.javac
 import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.main.JavaCompiler
 import com.sun.tools.javac.tree.JCTree
+import com.sun.tools.javac.tree.TreeInfo
 import com.sun.tools.javac.util.Context
 import org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.jcTreeWrappers.JCClass
+import org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.wrappers.JavacType
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import com.sun.tools.javac.util.List as JavacList
 import javax.tools.JavaFileObject
@@ -34,17 +36,22 @@ object ExtendedJavac {
 
     private val javaClasses = arrayListOf<JavaClass>()
 
+    fun findType(fqName: String) = symbols.classes
+            .filter { (k, _) -> k.toString() == fqName }
+            .map { it.value }
+            .firstOrNull()
+            ?.let { JavacType.create(it.asType()) }
+
     fun getTrees(fileObjects: List<JavaFileObject>) {
         val javacList = fileObjects.toJavacList()
 
         val compilationUnits = javac.parseFiles(javacList)
 
         compilationUnits.forEach { compilationUnit ->
-            val packageName = compilationUnit.packageName.toString()
             compilationUnit.typeDecls
                     .filterIsInstance<JCTree.JCClassDecl>()
                     .forEach {
-                        javaClasses.add(JCClass(it, null, packageName))
+                        javaClasses.add(JCClass(it, TreeInfo.pathFor(it, compilationUnit)))
                     }
         }
 
