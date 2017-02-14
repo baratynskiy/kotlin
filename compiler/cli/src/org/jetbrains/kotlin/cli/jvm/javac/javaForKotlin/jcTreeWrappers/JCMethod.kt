@@ -22,7 +22,18 @@ import org.jetbrains.kotlin.load.java.structure.JavaType
 import org.jetbrains.kotlin.name.Name
 
 class JCMethod<out T : JCTree.JCMethodDecl>(tree: T,
-                                            parent: JCClass<JCTree.JCClassDecl>) : JCMember<T>(tree, parent), JavaMethod {
+                                            treePath: List<JCTree>) : JCMember<T>(tree, treePath), JavaMethod {
+
+    init {
+        val returnType = tree.returnType
+
+        println("$returnType: ${returnType.javaClass}")
+        if (returnType is JCTree.JCPrimitiveTypeTree) {
+            println(returnType.toString())
+        } else if (returnType is JCTree.JCIdent) {
+            println(returnType.name)
+        }
+    }
 
     override val name = Name.identifier(tree.name.toString())
 
@@ -35,11 +46,11 @@ class JCMethod<out T : JCTree.JCMethodDecl>(tree: T,
     override val visibility = tree.modifiers.visibility
 
     override val typeParameters
-        get() = tree.typeParameters.map(::JCTypeParameter)
+        get() = tree.typeParameters.map { JCTypeParameter(it, treePath.newTreePath(it)) }
 
     override val valueParameters
         get() = tree.parameters
-                .map(::JCValueParameter)
+                .map { JCValueParameter(it, treePath.newTreePath(it)) }
 
     override val returnType: JavaType
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.

@@ -19,7 +19,8 @@ package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.jcTreeWrappers
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaElement
 
-abstract class JCElement<out T : JCTree>(val tree: T) : JavaElement {
+abstract class JCElement<out T : JCTree>(val tree: T,
+                                         val treePath: List<JCTree>) : JavaElement {
 
     override fun equals(other: Any?): Boolean {
         if (other !is JCElement<*>) return false

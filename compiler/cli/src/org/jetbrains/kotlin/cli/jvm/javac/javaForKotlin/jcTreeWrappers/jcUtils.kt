@@ -43,6 +43,10 @@ val JCTree.JCModifiers.visibility
         }
     }
 
+fun Collection<JCTree>.newTreePath(tree: JCTree) = toMutableList().apply { add(0, tree) }
+
+fun Collection<JCTree>.newTreePath() = drop(1)
+
 class AnnotationsSearcher(val tree: JCTree) : TreeScanner() {
 
     private val annotations = arrayListOf<JCTree.JCAnnotation>()

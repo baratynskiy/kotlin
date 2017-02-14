@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.SpecialNames
 
 class JCClass<out T : JCTree.JCClassDecl>(tree: T,
-                                          val treePath: List<JCTree>) : JCClassifier<T>(tree), JavaClass {
+                                          treePath: List<JCTree>) : JCClassifier<T>(tree, treePath), JavaClass {
 
     override val name = SpecialNames.safeIdentifier(tree.simpleName.toString())
 
@@ -43,7 +43,7 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val visibility = tree.modifiers.visibility
 
     override val typeParameters
-        get() = tree.typeParameters.map(::JCTypeParameter)
+        get() = tree.typeParameters.map { JCTypeParameter(it, treePath.newTreePath(it)) }
 
     override val fqName
         get() = treePath.reversed().joinToString(separator = ".") { (it as? JCTree.JCCompilationUnit)?.packageName?.toString() ?: (it as JCTree.JCClassDecl).name }
@@ -58,10 +58,7 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                 .map { JCClass(it, treePath.toMutableList().apply { add(0, it) }) }
 
     override val outerClass
-        get() = treePath.let {
-            val newTreePath = treePath.drop(1)
-            (treePath.firstOrNull() as? JCTree.JCClassDecl)?.let { JCClass<JCTree.JCClassDecl>(it, newTreePath) }
-        }
+        get() = (treePath.firstOrNull() as? JCTree.JCClassDecl)?.let { JCClass<JCTree.JCClassDecl>(it, treePath.newTreePath()) }
 
     override val isInterface = tree.modifiers.flags and Flags.INTERFACE.toLong() != 0L
 
@@ -76,16 +73,16 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                 .filterIsInstance(JCTree.JCMethodDecl::class.java)
                 .filter { it.kind == Tree.Kind.METHOD }
                 .filter { it.name.toString() != "<init>" }
-                .map { JCMethod(it, this) }
+                .map { JCMethod(it, treePath.newTreePath(it)) }
 
     override val fields
         get() = tree.members
                 .filterIsInstance(JCTree.JCVariableDecl::class.java)
-                .map { JCField(it, this) }
+                .map { JCField(it, treePath.newTreePath(it)) }
 
     override val constructors
         get() = tree.members
                 .filterIsInstance(JCTree.JCMethodDecl::class.java)
                 .filter { TreeInfo.isConstructor(it) }
-                .map { JCConstructor(it, this) }
+                .map { JCConstructor(it, treePath.newTreePath(it)) }
 }

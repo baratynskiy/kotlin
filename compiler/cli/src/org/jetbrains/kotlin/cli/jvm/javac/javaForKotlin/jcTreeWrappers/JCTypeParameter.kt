@@ -23,7 +23,8 @@ import org.jetbrains.kotlin.load.java.structure.JavaTypeParameter
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.SpecialNames
 
-class JCTypeParameter<out T : JCTree.JCTypeParameter>(tree: T) : JCClassifier<T>(tree), JavaTypeParameter {
+class JCTypeParameter<out T : JCTree.JCTypeParameter>(tree: T,
+                                                      treePath: List<JCTree>) : JCClassifier<T>(tree, treePath), JavaTypeParameter {
 
     override val name = SpecialNames.safeIdentifier(tree.name.toString())
 

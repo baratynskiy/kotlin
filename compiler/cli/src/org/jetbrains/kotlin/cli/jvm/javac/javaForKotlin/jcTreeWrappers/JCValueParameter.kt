@@ -24,7 +24,8 @@ import org.jetbrains.kotlin.load.java.structure.JavaValueParameter
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
-class JCValueParameter<out T : JCTree.JCVariableDecl>(tree: T) : JCElement<T>(tree), JavaValueParameter {
+class JCValueParameter<out T : JCTree.JCVariableDecl>(tree: T,
+                                                      treePath: List<JCTree>) : JCElement<T>(tree, treePath), JavaValueParameter {
 
     override val annotations: Collection<JavaAnnotation>
         get() = emptyList()

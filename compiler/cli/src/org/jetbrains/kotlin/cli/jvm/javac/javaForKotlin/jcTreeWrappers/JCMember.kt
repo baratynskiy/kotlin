@@ -22,7 +22,10 @@ import org.jetbrains.kotlin.load.java.structure.JavaMember
 import org.jetbrains.kotlin.name.FqName
 
 abstract class JCMember<out T : JCTree>(tree: T,
-                                        override val containingClass: JCClass<JCTree.JCClassDecl>) : JCElement<T>(tree), JavaMember {
+                                        treePath: List<JCTree>) : JCElement<T>(tree, treePath), JavaMember {
+
+    override val containingClass
+        get() = (treePath[1] as JCTree.JCClassDecl).let { JCClass(it, treePath.newTreePath()) }
 
     override val isDeprecatedInJavaDoc = false
 

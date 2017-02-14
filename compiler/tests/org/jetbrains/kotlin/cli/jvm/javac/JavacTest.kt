@@ -40,7 +40,7 @@ private class KotlinFileObject2 : SimpleJavaFileObject(URI("pack/Singleton.java"
 
     override fun getCharContent(ignoreEncodingErrors: Boolean) =
             "package pack; " +
-            "public class Singleton implements java.util.List {" +
+            "@Deprecated public class Singleton implements java.util.List {" +
             "" +
             "public static Singleton INSTANCE = new Singleton();" +
             "" +
@@ -50,9 +50,13 @@ private class KotlinFileObject2 : SimpleJavaFileObject(URI("pack/Singleton.java"
             "" +
             "private boolean field = true;" +
             "" +
-            "public boolean getField(String args) { return field; }" +
+            "private Boolean getBooleanField() { return field; }" +
             "" +
-            "private interface StaticClass {}" +
+            "private StaticClass getStaticClass() { return new StaticClass(); }" +
+            "" +
+            "@Override public boolean getField(String args) { return field; }" +
+            "" +
+            "private static class StaticClass {}" +
             "" +
             "}"
 

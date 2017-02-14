@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.load.java.structure.JavaType
 import org.jetbrains.kotlin.name.Name
 
 class JCField<out T : JCTree.JCVariableDecl>(tree: T,
-                                             parent: JCClass<JCTree.JCClassDecl>) : JCMember<T>(tree, parent), JavaField {
+                                             treePath: List<JCTree>) : JCMember<T>(tree, treePath), JavaField {
 
     override val name = Name.identifier(tree.name.toString())
 
