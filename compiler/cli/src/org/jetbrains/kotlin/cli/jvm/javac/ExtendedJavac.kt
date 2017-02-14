@@ -48,7 +48,6 @@ object ExtendedJavac {
                     }
         }
 
-        println(javaClasses)
     }
 
 }

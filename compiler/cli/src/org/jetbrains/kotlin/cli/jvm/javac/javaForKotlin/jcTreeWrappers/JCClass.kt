@@ -43,8 +43,8 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
 
     override val visibility = tree.modifiers.visibility
 
-    override val typeParameters: List<JavaTypeParameter>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val typeParameters
+        get() = tree.typeParameters.map(::JCTypeParameter)
 
     override val fqName: FqName = parent?.fqName?.child(name) ?: FqName(packageName + "." + name.toString())
 

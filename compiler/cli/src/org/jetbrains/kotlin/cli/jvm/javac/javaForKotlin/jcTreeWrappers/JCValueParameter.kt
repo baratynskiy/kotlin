@@ -16,33 +16,28 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.jcTreeWrappers
 
+import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
-import org.jetbrains.kotlin.load.java.structure.JavaMethod
+import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaType
+import org.jetbrains.kotlin.load.java.structure.JavaValueParameter
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
-class JCMethod<out T : JCTree.JCMethodDecl>(tree: T,
-                                            parent: JCClass<JCTree.JCClassDecl>) : JCMember<T>(tree, parent), JavaMethod {
+class JCValueParameter<out T : JCTree.JCVariableDecl>(tree: T) : JCElement<T>(tree), JavaValueParameter {
+
+    override val annotations: Collection<JavaAnnotation>
+        get() = emptyList()
+
+    override fun findAnnotation(fqName: FqName): JavaAnnotation? = null
+
+    override val isDeprecatedInJavaDoc = false
 
     override val name = Name.identifier(tree.name.toString())
 
-    override val isAbstract = tree.modifiers.isAbstract
-
-    override val isStatic = tree.modifiers.isStatic
-
-    override val isFinal = tree.modifiers.isFinal
-
-    override val visibility = tree.modifiers.visibility
-
-    override val typeParameters
-        get() = tree.typeParameters.map(::JCTypeParameter)
-
-    override val valueParameters
-        get() = tree.parameters
-                .map(::JCValueParameter)
-
-    override val returnType: JavaType
+    override val type: JavaType
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
-    override val hasAnnotationParameterDefaultValue = tree.defaultValue != null
+    override val isVararg: Boolean
+        get() = tree.modifiers.flags and Flags.VARARGS != 0L
 }

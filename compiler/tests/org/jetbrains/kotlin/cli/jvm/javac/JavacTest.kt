@@ -50,7 +50,7 @@ private class KotlinFileObject2 : SimpleJavaFileObject(URI("pack/Singleton.java"
             "" +
             "private boolean field = true;" +
             "" +
-            "public boolean getField() { return field; }" +
+            "public boolean getField(String args) { return field; }" +
             "" +
             "private interface StaticClass {}" +
             "" +

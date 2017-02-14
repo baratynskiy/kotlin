@@ -18,8 +18,6 @@ package org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.jcTreeWrappers
 
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaConstructor
-import org.jetbrains.kotlin.load.java.structure.JavaTypeParameter
-import org.jetbrains.kotlin.load.java.structure.JavaValueParameter
 import org.jetbrains.kotlin.name.Name
 
 class JCConstructor<out T : JCTree.JCMethodDecl>(tree: T,
@@ -35,10 +33,11 @@ class JCConstructor<out T : JCTree.JCMethodDecl>(tree: T,
 
     override val visibility = tree.modifiers.visibility
 
-    override val typeParameters: List<JavaTypeParameter>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val typeParameters
+        get() = tree.typeParameters.map(::JCTypeParameter)
 
-    override val valueParameters: List<JavaValueParameter>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val valueParameters
+        get() = tree.parameters
+                .map(::JCValueParameter)
 
 }
