@@ -29,13 +29,6 @@ import javax.tools.*
 
 // for tests
 
-internal class KotlinFileObject : SimpleJavaFileObject(URI("pack/SomeClass.java"), JavaFileObject.Kind.SOURCE) {
-
-    override fun getCharContent(ignoreEncodingErrors: Boolean) =
-            "package pack; import pack2.SomeClass2; public class SomeClass { public static void func() { System.out.println(); } " +
-            "/*public static SomeClass2 func2() { return new SomeClass2(); }*/ }"
-}
-
 internal class KotlinClassSymbol(name: Name, pack: Symbol.PackageSymbol) :
         Symbol.ClassSymbol(1L, name, pack) {
 
@@ -54,10 +47,10 @@ internal class KotlinClassSymbol(name: Name, pack: Symbol.PackageSymbol) :
 }
 
 internal class KotlinPackageSymbol(name: Name,
-                          root: Symbol.PackageSymbol,
-                          names: Name.Table,
-                          symtab: Symtab,
-                          completer: Completer) : Symbol.PackageSymbol(name, root) {
+                                   root: Symbol.PackageSymbol,
+                                   names: Name.Table,
+                                   symbols: Symtab,
+                                   completer: Completer) : Symbol.PackageSymbol(name, root) {
 
     val kotlinClass: Symbol.ClassSymbol
 
@@ -65,7 +58,7 @@ internal class KotlinPackageSymbol(name: Name,
         val kotlinClassName = names.fromString("SomeClass2")
         kotlinClass = KotlinClassSymbol(kotlinClassName, this)
 
-        symtab.classes.put(kotlinClassName, kotlinClass)
+        symbols.classes.put(kotlinClassName, kotlinClass)
 
         this.completer = completer
 
