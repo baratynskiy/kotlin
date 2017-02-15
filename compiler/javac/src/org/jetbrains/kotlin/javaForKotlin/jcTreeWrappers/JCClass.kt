@@ -20,6 +20,7 @@ import com.sun.source.tree.Tree
 import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.tree.TreeInfo
+import org.jetbrains.kotlin.javaForKotlin.wrappers.JavacClassifierType
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
@@ -54,7 +55,16 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                 .let(::FqName)
 
     override val supertypes: Collection<JavaClassifierType>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = arrayListOf<JavaClassifierType>().apply {
+            fun JCTree.mapToJavaClassifierType() = when {
+                this is JCTree.JCIdent -> JCClassifierType(this, treePath.newTreePath(this))
+                this is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(this, treePath.newTreePath(this))
+                else -> null
+            }
+
+            tree.extending?.mapToJavaClassifierType()?.let { add(it) }
+            tree.implementing?.map { it.mapToJavaClassifierType() }?.filterNotNull()?.let { addAll(it) }
+        }
 
     override val innerClasses
         get() = tree.members

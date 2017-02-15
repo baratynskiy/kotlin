@@ -19,34 +19,37 @@ package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.tree.TreeInfo
 import org.jetbrains.kotlin.ExtendedJavac
+import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaClassifier
 import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
 import org.jetbrains.kotlin.load.java.structure.JavaType
 
-class JCClassifierType<out T : JCTree.JCIdent>(tree: T,
-                                       treePath: List<JCTree>) : JCType<T>(tree, treePath), JavaClassifierType {
-
+abstract class ClassifierType<out T : JCTree>(tree: T,
+                                              treePath: List<JCTree>) : JCType<T>(tree, treePath), JavaClassifierType {
     override val classifier: JavaClassifier?
-        get() = getClassifier(tree, treePath)
-
-    override val typeArguments: List<JavaType>
-        get() = emptyList()
-
-    override val isRaw: Boolean
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = getClassifier(treePath)
 
     override val canonicalText: String
         get() = getFqName(treePath)
 
     override val presentableText: String
         get() = canonicalText
+
+}
+
+class JCClassifierType<out T : JCTree.JCIdent>(tree: T,
+                                       treePath: List<JCTree>) : ClassifierType<T>(tree, treePath) {
+
+    override val typeArguments: List<JavaType>
+        get() = emptyList()
+
+    override val isRaw: Boolean
+        get() = isRaw(treePath)
+
 }
 
 class JCClassifierTypeWithTypeArgument<out T : JCTree.JCTypeApply>(tree: T,
-                                                                   treePath: List<JCTree>) : JCType<T>(tree, treePath), JavaClassifierType {
-
-    override val classifier: JavaClassifier?
-        get() = getClassifier(tree, treePath)
+                                                                   treePath: List<JCTree>) : ClassifierType<T>(tree, treePath) {
 
     override val typeArguments: List<JavaType>
         get() = tree.arguments.map { JCType.create(it, treePath) }
@@ -54,11 +57,12 @@ class JCClassifierTypeWithTypeArgument<out T : JCTree.JCTypeApply>(tree: T,
     override val isRaw: Boolean
         get() = false
 
-    override val canonicalText: String
-        get() = getFqName(treePath)
+}
 
-    override val presentableText: String
-        get() = canonicalText
+private fun isRaw(treePath: List<JCTree>): Boolean {
+    val classifier = getClassifier(treePath) as? JavaClass ?: return false
+
+    return classifier.typeParameters.isNotEmpty()
 }
 
 private fun getFqName(treePath: List<JCTree>): String {
@@ -93,8 +97,11 @@ private fun getFqName(treePath: List<JCTree>): String {
     return simpleName
 }
 
-private fun getClassifier(tree: JCTree, treePath: List<JCTree>): JavaClassifier? {
+private fun getClassifier(treePath: List<JCTree>): JavaClassifier? {
+    val fqName = getFqName(treePath)
 
+    ExtendedJavac.findClass(fqName)?.let { return it }
+    ExtendedJavac.findStandardClass(fqName)?.let { return it }
 
     return null
 }

@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.javaForKotlin.wrappers
 
 import com.intellij.psi.CommonClassNames
+import org.jetbrains.kotlin.ExtendedJavac
 import org.jetbrains.kotlin.load.java.structure.*
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
@@ -51,10 +52,9 @@ class JavacClass<T : TypeElement>(element: T) : JavacClassifier<TypeElement>(ele
 
             val hasObject = !none { it.toString() == CommonClassNames.JAVA_LANG_OBJECT }
             if (!hasObject && element.toString() != CommonClassNames.JAVA_LANG_OBJECT) {
-                //TODO add(JavaWithKotlinCompiler.elements.getTypeElement(CommonClassNames.JAVA_LANG_OBJECT).asType())
+                add(ExtendedJavac.findStandardClass(CommonClassNames.JAVA_LANG_OBJECT)!!.element.asType())
             }
         }.map { JavacClassifierType(it) }
-
 
     override val innerClasses: Collection<JavaClass>
         get() = element.enclosedElements
