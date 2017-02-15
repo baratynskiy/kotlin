@@ -19,7 +19,6 @@ package org.jetbrains.kotlin.frontend.java.di
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.builtins.JvmBuiltInsPackageFragmentProvider
-import org.jetbrains.kotlin.cli.jvm.javac.javaForKotlin.JavacClassFinder
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.config.LanguageVersionSettings
@@ -65,8 +64,7 @@ fun StorageComponentContainer.configureJavaTopDownAnalysis(
 
     useImpl<FileScopeProviderImpl>()
 
-    useImpl<JavacClassFinder>()
-//    useImpl<JavaClassFinderImpl>()
+    useImpl<JavaClassFinderImpl>()
     useImpl<SignaturePropagatorImpl>()
     useImpl<LazyResolveBasedCache>()
     useImpl<TraceBasedErrorReporter>()
@@ -113,10 +111,9 @@ fun createContainerForLazyResolveWithJava(
     if (useLazyResolve) {
         useImpl<LazyResolveToken>()
     }
+}.apply {
+    get<JavaClassFinderImpl>().initialize(bindingTrace, get<KotlinCodeAnalyzer>())
 }
-//}.apply {
-//    get<JavaClassFinderImpl>().initialize(bindingTrace, get<KotlinCodeAnalyzer>())
-//}
 
 
 fun createContainerForTopDownAnalyzerForJvm(

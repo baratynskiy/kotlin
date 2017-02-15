@@ -16,15 +16,32 @@
 
 package org.jetbrains.kotlin.cli.jvm.javac
 
+import com.intellij.openapi.util.io.FileUtil
+import org.jetbrains.kotlin.ExtendedJavac
 import org.jetbrains.kotlin.test.testFramework.KtUsefulTestCase
+import org.jetbrains.kotlin.utils.addToStdlib.check
+import java.io.File
 import java.net.URI
+import java.util.regex.Pattern
 import javax.tools.JavaFileObject
 import javax.tools.SimpleJavaFileObject
 
 class JavacTest : KtUsefulTestCase() {
 
     fun testCommon() {
-        ExtendedJavac.getTrees(listOf(KotlinFileObject(), KotlinFileObject2(), KotlinFileObject3()))
+//        ExtendedJavac.getTrees(listOf(KotlinFileObject(), KotlinFileObject2(), KotlinFileObject3()))
+
+        val files = getAllJavaFilesFromDir("/Users/baratynskiy/Documents/masterTests/kotlin-netbeans/src/main/java")
+        ExtendedJavac.getTrees(files)
+    }
+
+    private fun getAllJavaFilesFromDir(dir: String): List<File> {
+        val folder = File(dir)?.check { it.isDirectory } ?: return emptyList()
+        val collectedFiles = arrayListOf<File>()
+
+        FileUtil.collectMatchedFiles(folder, Pattern.compile(".*.java"), collectedFiles)
+
+        return collectedFiles
     }
 
 }
@@ -55,6 +72,8 @@ private class KotlinFileObject2 : SimpleJavaFileObject(URI("pack/Singleton.java"
             "private StaticClass getStaticClass() { return new StaticClass(); }" +
             "" +
             "@Override public boolean getField(String args) { return field; }" +
+            "" +
+            "public UnknownClass getUnknownClass() { return null; }" +
             "" +
             "private static class StaticClass {}" +
             "" +
