@@ -17,6 +17,8 @@
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
 import com.sun.tools.javac.tree.JCTree
+import com.sun.tools.javac.tree.TreeInfo
+import org.jetbrains.kotlin.ExtendedJavac
 import org.jetbrains.kotlin.load.java.structure.JavaClassifier
 import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
 import org.jetbrains.kotlin.load.java.structure.JavaType
@@ -25,7 +27,7 @@ class JCClassifierType<out T : JCTree.JCIdent>(tree: T,
                                        treePath: List<JCTree>) : JCType<T>(tree, treePath), JavaClassifierType {
 
     override val classifier: JavaClassifier?
-        get() = null
+        get() = getClassifier(tree, treePath)
 
     override val typeArguments: List<JavaType>
         get() = emptyList()
@@ -34,7 +36,7 @@ class JCClassifierType<out T : JCTree.JCIdent>(tree: T,
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
     override val canonicalText: String
-        get() = tree.toString()
+        get() = getFqName(treePath)
 
     override val presentableText: String
         get() = canonicalText
@@ -44,7 +46,7 @@ class JCClassifierTypeWithTypeArgument<out T : JCTree.JCTypeApply>(tree: T,
                                                                    treePath: List<JCTree>) : JCType<T>(tree, treePath), JavaClassifierType {
 
     override val classifier: JavaClassifier?
-        get() = null
+        get() = getClassifier(tree, treePath)
 
     override val typeArguments: List<JavaType>
         get() = tree.arguments.map { JCType.create(it, treePath) }
@@ -53,8 +55,46 @@ class JCClassifierTypeWithTypeArgument<out T : JCTree.JCTypeApply>(tree: T,
         get() = false
 
     override val canonicalText: String
-        get() = tree.toString()
+        get() = getFqName(treePath)
 
     override val presentableText: String
         get() = canonicalText
+}
+
+private fun getFqName(treePath: List<JCTree>): String {
+    val simpleName = treePath.first().toString().substringBefore("<")
+    val compilationUnit = treePath.last() as JCTree.JCCompilationUnit
+
+    val importStatement = compilationUnit.imports.firstOrNull { it.qualifiedIdentifier.toString().endsWith(".$simpleName") }
+    importStatement?.let { return it.qualifiedIdentifier.toString() }
+
+    fun JCTree.JCClassDecl.innerClasses(): List<JCTree.JCClassDecl> = arrayListOf(this).also {
+        it.addAll(members.filterIsInstance<JCTree.JCClassDecl>()
+                          .flatMap(JCTree.JCClassDecl::innerClasses))
+    }
+
+    compilationUnit.typeDecls
+            .filterIsInstance<JCTree.JCClassDecl>()
+            .flatMap(JCTree.JCClassDecl::innerClasses)
+            .filter {
+                it.simpleName.toString() == simpleName
+            }
+            .firstOrNull()
+            ?.let {
+                val type = JCClass(it, TreeInfo.pathFor(it, compilationUnit))
+                return type.fqName.asString()
+            }
+
+    ExtendedJavac.findClasses(simpleName)
+            .filter { it.fullname.toString().startsWith("java.lang.") }
+            .firstOrNull()
+            ?.let { return it.fullname.toString() }
+
+    return simpleName
+}
+
+private fun getClassifier(tree: JCTree, treePath: List<JCTree>): JavaClassifier? {
+
+
+    return null
 }

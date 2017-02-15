@@ -27,7 +27,10 @@ import org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers.JCWildcardType
 import org.jetbrains.kotlin.javaForKotlin.wrappers.JavacClass
 import org.jetbrains.kotlin.javaForKotlin.wrappers.JavacType
 import org.jetbrains.kotlin.load.java.structure.JavaClass
+import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
+import org.jetbrains.kotlin.load.java.structure.JavaField
 import java.io.File
+import javax.lang.model.element.TypeElement
 import javax.tools.JavaFileManager
 import com.sun.tools.javac.util.List as JavacList
 import javax.tools.JavaFileObject
@@ -40,6 +43,10 @@ object ExtendedJavac {
     private val javac by lazy { JavaCompiler(context) }
 
     private val javaClasses = arrayListOf<JavaClass>()
+
+    fun findClasses(simpleName: String) = symbols.classes
+            .filter { (k, _) -> k.toString().endsWith(simpleName) }
+            .map { it.value }
 
     fun findType(fqName: String) = symbols.classes
             .filter { (k, _) -> k.toString() == fqName }
@@ -75,7 +82,9 @@ object ExtendedJavac {
         }
 
         javaClasses.first().fields
-                .map { it.type }
+                .map(JavaField::type)
+                .filterIsInstance<JavaClassifierType>()
+                .map(JavaClassifierType::canonicalText)
                 .let(::println)
     }
 
