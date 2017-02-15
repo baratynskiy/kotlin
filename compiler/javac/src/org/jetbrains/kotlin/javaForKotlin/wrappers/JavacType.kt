@@ -31,7 +31,6 @@ open class JavacType<out T : TypeMirror>(val typeMirror: T) : JavaType, JavaAnno
             t.kind == TypeKind.DECLARED || t.kind == TypeKind.TYPEVAR -> JavacClassifierType(t)
             t.kind == TypeKind.WILDCARD -> JavacWildcardType(t)
             t.kind == TypeKind.ARRAY -> JavacArrayType(t)
-            t.kind == TypeKind.ERROR -> JavacErrorType(t)
             else -> throw UnsupportedOperationException("Unsupported type: $t")
         }
     }
@@ -52,9 +51,5 @@ open class JavacType<out T : TypeMirror>(val typeMirror: T) : JavaType, JavaAnno
     override fun hashCode() = typeMirror.hashCode()
 
     override fun toString() = typeMirror.toString()
-
-}
-
-class JavacErrorType<out T : TypeMirror>(typeMirror: T) : JavacType<T>(typeMirror) {
 
 }

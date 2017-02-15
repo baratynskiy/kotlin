@@ -14,27 +14,31 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.javaForKotlin.wrappers
+package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
 import org.jetbrains.kotlin.ExtendedJavac
 import org.jetbrains.kotlin.load.java.structure.JavaPackage
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
-import javax.lang.model.element.PackageElement
-import javax.lang.model.element.TypeElement
 
-class JavacPackage(val element: PackageElement) : JavaPackage {
+class JCPackage(val name: String) : JavaPackage {
 
-    override val fqName
-        get() = element.qualifiedName.let { FqName(it.toString()) }
+    override val fqName: FqName
+        get() = FqName(name)
 
-    override val subPackages
-        get() = ExtendedJavac.findSubPackages(element).map(::JavacPackage)
+    override val subPackages: Collection<JavaPackage>
+        get() = ExtendedJavac.findSubPackages(this)
 
-    override fun getClasses(nameFilter: (Name) -> Boolean) = element.enclosedElements
-            .filterIsInstance(TypeElement::class.java)
-            .filter { Name.isValidIdentifier(it.simpleName.toString())
-                      && nameFilter(Name.identifier(it.simpleName.toString()))
-            }
-            .map(::JavacClass)
+    override fun getClasses(nameFilter: (Name) -> Boolean) = ExtendedJavac.findPackageClasses(this)
+            .filter { Name.isValidIdentifier(it.fqName!!.shortName().asString()) && nameFilter(Name.identifier(it.fqName!!.shortName().asString()))
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is JCPackage) return false
+
+        return name == other.name
+    }
+
+    override fun hashCode() = name.hashCode()
+
 }

@@ -20,14 +20,11 @@ import com.sun.source.tree.Tree
 import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.tree.TreeInfo
-import org.jetbrains.kotlin.javaForKotlin.wrappers.JavacClassifierType
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.SpecialNames
-import kotlin.jvm.java
-import kotlin.let
 
 class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                                           treePath: List<JCTree>) : JCClassifier<T>(tree, treePath), JavaClass {
@@ -54,7 +51,7 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
         get() = treePath.reversed().joinToString(separator = ".") { (it as? JCTree.JCCompilationUnit)?.packageName?.toString() ?: (it as JCTree.JCClassDecl).name }
                 .let(::FqName)
 
-    override val supertypes: Collection<JavaClassifierType>
+    override val supertypes
         get() = arrayListOf<JavaClassifierType>().apply {
             fun JCTree.mapToJavaClassifierType() = when {
                 this is JCTree.JCIdent -> JCClassifierType(this, treePath.newTreePath(this))
