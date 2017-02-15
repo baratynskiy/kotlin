@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.javaForKotlin.wrappers
+package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
+import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.builtins.PrimitiveType
 import org.jetbrains.kotlin.load.java.structure.JavaPrimitiveType
 import org.jetbrains.kotlin.resolve.jvm.JvmPrimitiveType
-import javax.lang.model.type.TypeMirror
 
-class JavacPrimitiveType<out T : TypeMirror>(typeMirror: T) : JavacType<T>(typeMirror), org.jetbrains.kotlin.load.java.structure.JavaPrimitiveType {
-
+class JCPrimitiveType<out T : JCTree.JCPrimitiveTypeTree>(tree: T,
+                                                          treePath: List<JCTree>) : JCType<T>(tree, treePath), JavaPrimitiveType {
     override val type: PrimitiveType?
-        get() = if ("void" == typeMirror.toString()) null else JvmPrimitiveType.get(typeMirror.toString()).primitiveType
-
+        get() = if ("void" == tree.toString()) null else JvmPrimitiveType.get(tree.toString()).primitiveType
 }

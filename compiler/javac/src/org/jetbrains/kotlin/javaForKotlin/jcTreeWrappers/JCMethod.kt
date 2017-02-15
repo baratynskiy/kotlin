@@ -26,18 +26,7 @@ import kotlin.jvm.javaClass
 class JCMethod<out T : JCTree.JCMethodDecl>(tree: T,
                                             treePath: List<JCTree>) : JCMember<T>(tree, treePath), JavaMethod {
 
-    init {
-        val returnType = tree.returnType
-
-        println("$returnType: ${returnType.javaClass}")
-        if (returnType is JCTree.JCPrimitiveTypeTree) {
-            println(returnType.toString())
-        } else if (returnType is JCTree.JCIdent) {
-            println(returnType.name)
-        }
-    }
-
-    override val name = org.jetbrains.kotlin.name.Name.identifier(tree.name.toString())
+    override val name = Name.identifier(tree.name.toString())
 
     override val isAbstract = tree.modifiers.isAbstract
 
@@ -55,7 +44,7 @@ class JCMethod<out T : JCTree.JCMethodDecl>(tree: T,
                 .map { JCValueParameter(it, treePath.newTreePath(it)) }
 
     override val returnType: JavaType
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = JCType.create(tree.returnType, treePath)
 
     override val hasAnnotationParameterDefaultValue = tree.defaultValue != null
 }

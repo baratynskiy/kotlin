@@ -19,7 +19,10 @@ package org.jetbrains.kotlin
 import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.main.JavaCompiler
 import com.sun.tools.javac.file.JavacFileManager
+import com.sun.tools.javac.tree.JCTree
+import com.sun.tools.javac.tree.TreeInfo
 import com.sun.tools.javac.util.Context
+import org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers.JCClass
 import org.jetbrains.kotlin.javaForKotlin.wrappers.JavacClass
 import org.jetbrains.kotlin.javaForKotlin.wrappers.JavacType
 import org.jetbrains.kotlin.load.java.structure.JavaClass
@@ -27,13 +30,6 @@ import java.io.File
 import javax.tools.JavaFileManager
 import com.sun.tools.javac.util.List as JavacList
 import javax.tools.JavaFileObject
-import kotlin.collections.filter
-import kotlin.collections.firstOrNull
-import kotlin.collections.forEach
-import kotlin.collections.map
-import kotlin.collections.toTypedArray
-import kotlin.jvm.java
-import kotlin.let
 
 object ExtendedJavac {
 
@@ -69,7 +65,16 @@ object ExtendedJavac {
         val javacList = fileObjects.toJavacList()
 
         val compilationUnits = javac.parseFiles(javacList)
-        javac.enterTrees(compilationUnits)
+
+        compilationUnits.forEach { compilationUnit ->
+            compilationUnit.typeDecls.forEach { type ->
+                val treePath = TreeInfo.pathFor(type, compilationUnit)
+                JCClass(type as JCTree.JCClassDecl, treePath).let { javaClasses.add(it) }
+            }
+        }
+
+        println(javaClasses.first().fields.map { it.type })
+//        javac.enterTrees(compilationUnits)
     }
 
 }

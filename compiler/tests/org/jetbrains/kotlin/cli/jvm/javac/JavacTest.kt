@@ -29,14 +29,11 @@ import javax.tools.SimpleJavaFileObject
 class JavacTest : KtUsefulTestCase() {
 
     fun testCommon() {
-//        ExtendedJavac.getTrees(listOf(KotlinFileObject(), KotlinFileObject2(), KotlinFileObject3()))
-
-        val files = getAllJavaFilesFromDir("/Users/baratynskiy/Documents/masterTests/kotlin-netbeans/src/main/java")
-        ExtendedJavac.getTrees(files)
+        ExtendedJavac.getTrees(listOf(KotlinFileObject4()))
     }
 
     private fun getAllJavaFilesFromDir(dir: String): List<File> {
-        val folder = File(dir)?.check { it.isDirectory } ?: return emptyList()
+        val folder = File(dir).check { it.isDirectory } ?: return emptyList()
         val collectedFiles = arrayListOf<File>()
 
         FileUtil.collectMatchedFiles(folder, Pattern.compile(".*.java"), collectedFiles)
@@ -87,6 +84,19 @@ private class KotlinFileObject3 : SimpleJavaFileObject(URI("pack/Enum.java"), Ja
             "package pack; " +
             "public enum Enum {" +
             "SINGLE;" +
+            "" +
+            "}"
+
+}
+
+private class KotlinFileObject4 : SimpleJavaFileObject(URI("pack/SimpleClass.java"), JavaFileObject.Kind.SOURCE) {
+
+    override fun getCharContent(ignoreEncodingErrors: Boolean) =
+            "package pack; " +
+            "public class SimpleClass {" +
+            "private int smth = 1;" +
+            "" +
+            "private double[] smth2;" +
             "" +
             "}"
 

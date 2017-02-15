@@ -16,27 +16,18 @@
 
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
-import com.sun.tools.javac.code.Flags
+import com.sun.source.tree.Tree
 import com.sun.tools.javac.tree.JCTree
-import org.jetbrains.kotlin.load.java.structure.JavaField
 import org.jetbrains.kotlin.load.java.structure.JavaType
-import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.load.java.structure.JavaWildcardType
 
-class JCField<out T : JCTree.JCVariableDecl>(tree: T,
-                                             treePath: List<JCTree>) : JCMember<T>(tree, treePath), JavaField {
+class JCWildcardType<out T : JCTree.JCWildcard>(tree: T,
+                                                treePath: List<JCTree>) : JCType<T>(tree, treePath), JavaWildcardType {
 
-    override val name = Name.identifier(tree.name.toString())
+    override val bound: JavaType?
+        get() = JCType.create(tree.bound, treePath)
 
-    override val isAbstract = tree.modifiers.isAbstract
+    override val isExtends: Boolean
+        get() = tree.kind == Tree.Kind.EXTENDS_WILDCARD
 
-    override val isStatic = tree.modifiers.isStatic
-
-    override val isFinal = tree.modifiers.isFinal
-
-    override val visibility = tree.modifiers.visibility
-
-    override val isEnumEntry = tree.modifiers.flags and Flags.ENUM.toLong() != 0L
-
-    override val type: JavaType
-        get() = JCType.create(tree.getType(), treePath)
 }

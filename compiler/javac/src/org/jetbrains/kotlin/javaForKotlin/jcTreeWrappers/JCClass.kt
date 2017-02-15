@@ -24,18 +24,19 @@ import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.SpecialNames
 import kotlin.jvm.java
 import kotlin.let
 
 class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                                           treePath: List<JCTree>) : JCClassifier<T>(tree, treePath), JavaClass {
 
-    override val name = org.jetbrains.kotlin.name.SpecialNames.safeIdentifier(tree.simpleName.toString())
+    override val name = SpecialNames.safeIdentifier(tree.simpleName.toString())
 
-    override val annotations: Collection<org.jetbrains.kotlin.load.java.structure.JavaAnnotation>
+    override val annotations: Collection<JavaAnnotation>
         get() = emptyList()
 
-    override fun findAnnotation(fqName: org.jetbrains.kotlin.name.FqName): JavaAnnotation? = null
+    override fun findAnnotation(fqName: FqName): JavaAnnotation? = null
 
     override val isAbstract = tree.modifiers.isAbstract
 

@@ -16,27 +16,12 @@
 
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
-import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
-import org.jetbrains.kotlin.load.java.structure.JavaField
+import org.jetbrains.kotlin.load.java.structure.JavaArrayType
 import org.jetbrains.kotlin.load.java.structure.JavaType
-import org.jetbrains.kotlin.name.Name
 
-class JCField<out T : JCTree.JCVariableDecl>(tree: T,
-                                             treePath: List<JCTree>) : JCMember<T>(tree, treePath), JavaField {
-
-    override val name = Name.identifier(tree.name.toString())
-
-    override val isAbstract = tree.modifiers.isAbstract
-
-    override val isStatic = tree.modifiers.isStatic
-
-    override val isFinal = tree.modifiers.isFinal
-
-    override val visibility = tree.modifiers.visibility
-
-    override val isEnumEntry = tree.modifiers.flags and Flags.ENUM.toLong() != 0L
-
-    override val type: JavaType
-        get() = JCType.create(tree.getType(), treePath)
+class JCArrayType<out T : JCTree.JCArrayTypeTree>(tree: T,
+                                                  treePath: List<JCTree>) : JCType<T>(tree, treePath), JavaArrayType {
+    override val componentType: JavaType
+        get() = create(tree.elemtype, treePath)
 }

@@ -17,7 +17,6 @@
 package org.jetbrains.kotlin.javaForKotlin.wrappers
 
 import org.jetbrains.kotlin.load.java.structure.JavaArrayType
-import org.jetbrains.kotlin.load.java.structure.JavaType
 import javax.lang.model.type.ArrayType
 import javax.lang.model.type.TypeMirror
 
