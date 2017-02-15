@@ -30,6 +30,8 @@ abstract class JCType<out T : JCTree>(val tree: T,
             is JCTree.JCPrimitiveTypeTree -> JCPrimitiveType(tree, treePath.newTreePath(tree))
             is JCTree.JCArrayTypeTree -> JCArrayType(tree, treePath.newTreePath(tree))
             is JCTree.JCWildcard -> JCWildcardType(tree, treePath.newTreePath(tree))
+            is JCTree.JCIdent -> JCClassifierType(tree, treePath.newTreePath(tree))
+            is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(tree, treePath.newTreePath(tree))
             else -> throw UnsupportedOperationException("Unsupported type: $tree")
         }
     }

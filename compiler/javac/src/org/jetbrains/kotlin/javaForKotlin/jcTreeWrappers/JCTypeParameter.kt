@@ -34,6 +34,13 @@ class JCTypeParameter<out T : JCTree.JCTypeParameter>(tree: T,
     override fun findAnnotation(fqName: FqName): JavaAnnotation? = null
 
     override val upperBounds: Collection<JavaClassifierType>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = tree.bounds.map {
+            val type: JavaClassifierType? = when(it) {
+                is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(it, treePath.newTreePath(it))
+                is JCTree.JCIdent -> JCClassifierType(it, treePath.newTreePath(it))
+                else -> null
+            }
+            type
+        }.filterNotNull()
 
 }

@@ -23,6 +23,7 @@ import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.tree.TreeInfo
 import com.sun.tools.javac.util.Context
 import org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers.JCClass
+import org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers.JCWildcardType
 import org.jetbrains.kotlin.javaForKotlin.wrappers.JavacClass
 import org.jetbrains.kotlin.javaForKotlin.wrappers.JavacType
 import org.jetbrains.kotlin.load.java.structure.JavaClass
@@ -73,8 +74,9 @@ object ExtendedJavac {
             }
         }
 
-        println(javaClasses.first().fields.map { it.type })
-//        javac.enterTrees(compilationUnits)
+        javaClasses.first().fields
+                .map { it.type }
+                .let(::println)
     }
 
 }
