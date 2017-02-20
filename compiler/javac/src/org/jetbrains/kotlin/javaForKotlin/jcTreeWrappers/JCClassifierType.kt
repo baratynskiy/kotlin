@@ -37,7 +37,7 @@ abstract class ClassifierType<out T : JCTree>(tree: T,
 
 }
 
-class JCClassifierType<out T : JCTree.JCIdent>(tree: T,
+class JCClassifierType<out T : JCTree.JCExpression>(tree: T,
                                        treePath: TreePath) : ClassifierType<T>(tree, treePath) {
 
     override val typeArguments: List<JavaType>

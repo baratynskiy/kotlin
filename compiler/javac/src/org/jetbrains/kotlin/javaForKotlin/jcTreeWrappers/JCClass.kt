@@ -20,6 +20,7 @@ import com.sun.source.tree.Tree
 import com.sun.source.util.TreePath
 import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
+import com.sun.tools.javac.tree.JCTree.JCFieldAccess
 import com.sun.tools.javac.tree.TreeInfo
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaClass
@@ -55,7 +56,7 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val supertypes
         get() = arrayListOf<JavaClassifierType>().apply {
             fun JCTree.mapToJavaClassifierType() = when {
-                this is JCTree.JCIdent -> JCClassifierType(this, TreePath(treePath, this))
+                this is JCTree.JCExpression -> JCClassifierType(this, TreePath(treePath, this))
                 this is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(this, TreePath(treePath, this))
                 else -> null
             }
