@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
@@ -24,7 +25,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.SpecialNames
 
 class JCTypeParameter<out T : JCTree.JCTypeParameter>(tree: T,
-                                                      treePath: List<JCTree>) : JCClassifier<T>(tree, treePath), JavaTypeParameter {
+                                                      treePath: TreePath) : JCClassifier<T>(tree, treePath), JavaTypeParameter {
 
     override val name = SpecialNames.safeIdentifier(tree.name.toString())
 
@@ -36,8 +37,8 @@ class JCTypeParameter<out T : JCTree.JCTypeParameter>(tree: T,
     override val upperBounds: Collection<JavaClassifierType>
         get() = tree.bounds.map {
             val type: JavaClassifierType? = when(it) {
-                is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(it, treePath.newTreePath(it))
-                is JCTree.JCIdent -> JCClassifierType(it, treePath.newTreePath(it))
+                is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(it, TreePath(treePath, it))
+                is JCTree.JCIdent -> JCClassifierType(it, TreePath(treePath, it))
                 else -> null
             }
             type

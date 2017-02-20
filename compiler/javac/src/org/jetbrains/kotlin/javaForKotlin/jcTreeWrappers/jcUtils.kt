@@ -17,13 +17,9 @@
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
 import com.sun.tools.javac.tree.JCTree
-import com.sun.tools.javac.tree.TreeScanner
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.load.java.JavaVisibilities
 import javax.lang.model.element.Modifier
-import kotlin.apply
-import kotlin.collections.drop
-import kotlin.collections.toMutableList
 import kotlin.let
 
 val JCTree.JCModifiers.isAbstract
@@ -46,18 +42,3 @@ val JCTree.JCModifiers.visibility
             else -> JavaVisibilities.PACKAGE_VISIBILITY
         }
     }
-
-fun Collection<JCTree>.newTreePath(tree: JCTree) = toMutableList().apply { add(0, tree) }
-
-fun Collection<JCTree>.newTreePath() = drop(1)
-
-class AnnotationsSearcher(val tree: JCTree) : TreeScanner() {
-
-    private val annotations = arrayListOf<JCTree.JCAnnotation>()
-
-    fun annotations() = scan(tree).let { annotations }
-
-    override fun visitAnnotation(annotation: JCTree.JCAnnotation) = annotations.apply { add(annotation) }
-            .let { super.visitAnnotation(annotation) }
-
-}

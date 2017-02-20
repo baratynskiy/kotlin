@@ -16,20 +16,22 @@
 
 package org.jetbrains.kotlin
 
+import com.sun.source.tree.CompilationUnitTree
+import com.sun.tools.javac.api.JavacTrees
 import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.main.JavaCompiler
 import com.sun.tools.javac.file.JavacFileManager
 import com.sun.tools.javac.tree.JCTree
-import com.sun.tools.javac.tree.TreeInfo
 import com.sun.tools.javac.util.Context
+import org.jetbrains.kotlin.javaForKotlin.JCClassFinder
 import org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers.JCClass
 import org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers.JCPackage
 import org.jetbrains.kotlin.javaForKotlin.wrappers.JavacClass
 import org.jetbrains.kotlin.javaForKotlin.wrappers.JavacPackage
 import org.jetbrains.kotlin.load.java.structure.JavaClass
-import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
-import org.jetbrains.kotlin.load.java.structure.JavaField
 import org.jetbrains.kotlin.load.java.structure.JavaPackage
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.isChildOf
 import org.jetbrains.kotlin.name.isSubpackageOf
 import java.io.File
@@ -44,6 +46,7 @@ object ExtendedJavac {
     private val javac by lazy { JavaCompiler(context) }
 
     private val symbols by lazy { Symtab.instance(context) }
+    private val trees by lazy { JavacTrees.instance(context) }
 
     private val javaClasses = arrayListOf<JavaClass>()
     private val javaPackages = hashSetOf<JavaPackage>()
@@ -59,6 +62,8 @@ object ExtendedJavac {
     fun findSubPackages(pack: JavaPackage) = javaPackages.filter { it.fqName.isSubpackageOf(pack.fqName) }
 
     fun findPackageClasses(pack: JavaPackage) = javaClasses.filter { it.fqName?.isChildOf(pack.fqName) ?: false }
+
+    fun getTreePath(tree: JCTree, compilationUnit: CompilationUnitTree) = trees.getPath(compilationUnit, tree)
 
     private fun JavaClass.allInnerClasses(): List<JavaClass> = arrayListOf(this).also {
         innerClasses.forEach { inner -> it.addAll(inner.allInnerClasses()) }
@@ -107,16 +112,16 @@ object ExtendedJavac {
             JCPackage(compilationUnit.packageName.toString()).let { javaPackages.add(it) }
 
             compilationUnit.typeDecls.forEach { type ->
-                val treePath = TreeInfo.pathFor(type, compilationUnit)
+                val treePath = trees.getPath(compilationUnit, type)
+
                 JCClass(type as JCTree.JCClassDecl, treePath).let { javaClasses.add(it) }
             }
         }
 
-        javaClasses.first().fields
-                .map(JavaField::type)
-                .filterIsInstance<JavaClassifierType>()
-                .map { "${it.canonicalText}: ${it.isRaw}" }
-                .let(::println)
+        val classFinder = JCClassFinder()
+
+        val clazz = classFinder.findClass(ClassId(FqName("pack"), FqName("Singleton"), false))
+        println(clazz?.methods?.map { it.name })
     }
 
 }

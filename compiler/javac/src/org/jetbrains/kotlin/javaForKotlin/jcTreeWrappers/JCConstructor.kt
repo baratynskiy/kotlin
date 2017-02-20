@@ -16,13 +16,14 @@
 
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaConstructor
 import org.jetbrains.kotlin.name.Name
 import kotlin.collections.map
 
 class JCConstructor<out T : JCTree.JCMethodDecl>(tree: T,
-                                                 treePath: List<JCTree>) : JCMember<T>(tree, treePath), JavaConstructor {
+                                                 treePath: TreePath) : JCMember<T>(tree, treePath), JavaConstructor {
 
     override val name = Name.identifier(tree.name.toString())
 
@@ -35,10 +36,10 @@ class JCConstructor<out T : JCTree.JCMethodDecl>(tree: T,
     override val visibility = tree.modifiers.visibility
 
     override val typeParameters
-        get() = tree.typeParameters.map { JCTypeParameter(it, treePath.newTreePath(it)) }
+        get() = tree.typeParameters.map { JCTypeParameter(it, TreePath(treePath, it)) }
 
     override val valueParameters
         get() = tree.parameters
-                .map { JCValueParameter(it, treePath.newTreePath(it)) }
+                .map { JCValueParameter(it, TreePath(treePath, it)) }
 
 }

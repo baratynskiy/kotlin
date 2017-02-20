@@ -16,11 +16,12 @@
 
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaElement
 
 abstract class JCElement<out T : JCTree>(val tree: T,
-                                         val treePath: List<JCTree>) : JavaElement {
+                                         val treePath: TreePath) : JavaElement {
 
     override fun equals(other: Any?): Boolean {
         if (other !is JCElement<*>) return false

@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
@@ -25,7 +26,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 class JCValueParameter<out T : JCTree.JCVariableDecl>(tree: T,
-                                                      treePath: List<JCTree>) : JCElement<T>(tree, treePath), JavaValueParameter {
+                                                      treePath: TreePath) : JCElement<T>(tree, treePath), JavaValueParameter {
 
     override val annotations: Collection<JavaAnnotation>
         get() = emptyList()

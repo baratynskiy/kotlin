@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
 import com.sun.source.tree.Tree
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.tree.TreeInfo
@@ -27,7 +28,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.SpecialNames
 
 class JCClass<out T : JCTree.JCClassDecl>(tree: T,
-                                          treePath: List<JCTree>) : JCClassifier<T>(tree, treePath), JavaClass {
+                                          treePath: TreePath) : JCClassifier<T>(tree, treePath), JavaClass {
 
     override val name = SpecialNames.safeIdentifier(tree.simpleName.toString())
 
@@ -45,7 +46,7 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val visibility = tree.modifiers.visibility
 
     override val typeParameters
-        get() = tree.typeParameters.map { JCTypeParameter(it, treePath.newTreePath(it)) }
+        get() = tree.typeParameters.map { JCTypeParameter(it, TreePath(treePath, it)) }
 
     override val fqName
         get() = treePath.reversed().joinToString(separator = ".") { (it as? JCTree.JCCompilationUnit)?.packageName?.toString() ?: (it as JCTree.JCClassDecl).name }
@@ -54,8 +55,8 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val supertypes
         get() = arrayListOf<JavaClassifierType>().apply {
             fun JCTree.mapToJavaClassifierType() = when {
-                this is JCTree.JCIdent -> JCClassifierType(this, treePath.newTreePath(this))
-                this is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(this, treePath.newTreePath(this))
+                this is JCTree.JCIdent -> JCClassifierType(this, TreePath(treePath, this))
+                this is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(this, TreePath(treePath, this))
                 else -> null
             }
 
@@ -66,10 +67,10 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val innerClasses
         get() = tree.members
                 .filterIsInstance(JCTree.JCClassDecl::class.java)
-                .map { JCClass(it, treePath.toMutableList().apply { add(0, it) }) }
+                .map { JCClass(it, TreePath(treePath, it)) }
 
     override val outerClass
-        get() = (treePath.firstOrNull() as? JCTree.JCClassDecl)?.let { JCClass<JCTree.JCClassDecl>(it, treePath.newTreePath()) }
+        get() = (treePath.firstOrNull() as? JCTree.JCClassDecl)?.let { JCClass<JCTree.JCClassDecl>(it, treePath.parentPath) }
 
     override val isInterface = tree.modifiers.flags and Flags.INTERFACE.toLong() != 0L
 
@@ -84,16 +85,16 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                 .filterIsInstance(JCTree.JCMethodDecl::class.java)
                 .filter { it.kind == Tree.Kind.METHOD }
                 .filter { it.name.toString() != "<init>" }
-                .map { JCMethod(it, treePath.newTreePath(it)) }
+                .map { JCMethod(it, TreePath(treePath, it)) }
 
     override val fields
         get() = tree.members
                 .filterIsInstance(JCTree.JCVariableDecl::class.java)
-                .map { JCField(it, treePath.newTreePath(it)) }
+                .map { JCField(it, TreePath(treePath, it)) }
 
     override val constructors
         get() = tree.members
                 .filterIsInstance(JCTree.JCMethodDecl::class.java)
                 .filter { TreeInfo.isConstructor(it) }
-                .map { JCConstructor(it, treePath.newTreePath(it)) }
+                .map { JCConstructor(it, TreePath(treePath, it)) }
 }

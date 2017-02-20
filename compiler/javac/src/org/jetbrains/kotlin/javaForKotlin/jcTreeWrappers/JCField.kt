@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaField
@@ -23,7 +24,7 @@ import org.jetbrains.kotlin.load.java.structure.JavaType
 import org.jetbrains.kotlin.name.Name
 
 class JCField<out T : JCTree.JCVariableDecl>(tree: T,
-                                             treePath: List<JCTree>) : JCMember<T>(tree, treePath), JavaField {
+                                             treePath: TreePath) : JCMember<T>(tree, treePath), JavaField {
 
     override val name = Name.identifier(tree.name.toString())
 

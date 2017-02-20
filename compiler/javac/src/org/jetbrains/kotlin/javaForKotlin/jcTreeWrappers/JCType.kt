@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationOwner
@@ -23,15 +24,15 @@ import org.jetbrains.kotlin.load.java.structure.JavaType
 import org.jetbrains.kotlin.name.FqName
 
 abstract class JCType<out T : JCTree>(val tree: T,
-                                      val treePath: List<JCTree>) : JavaType, JavaAnnotationOwner {
+                                      val treePath: TreePath) : JavaType, JavaAnnotationOwner {
 
     companion object {
-        fun <Type : JCTree> create(tree: Type, treePath: List<JCTree>) = when (tree) {
-            is JCTree.JCPrimitiveTypeTree -> JCPrimitiveType(tree, treePath.newTreePath(tree))
-            is JCTree.JCArrayTypeTree -> JCArrayType(tree, treePath.newTreePath(tree))
-            is JCTree.JCWildcard -> JCWildcardType(tree, treePath.newTreePath(tree))
-            is JCTree.JCIdent -> JCClassifierType(tree, treePath.newTreePath(tree))
-            is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(tree, treePath.newTreePath(tree))
+        fun <Type : JCTree> create(tree: Type, treePath: TreePath) = when (tree) {
+            is JCTree.JCPrimitiveTypeTree -> JCPrimitiveType(tree, TreePath(treePath, tree))
+            is JCTree.JCArrayTypeTree -> JCArrayType(tree, TreePath(treePath, tree))
+            is JCTree.JCWildcard -> JCWildcardType(tree, TreePath(treePath, tree))
+            is JCTree.JCIdent -> JCClassifierType(tree, TreePath(treePath, tree))
+            is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(tree, TreePath(treePath, tree))
             else -> throw UnsupportedOperationException("Unsupported type: $tree")
         }
     }

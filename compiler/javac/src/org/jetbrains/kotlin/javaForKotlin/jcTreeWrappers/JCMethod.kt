@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaMethod
 import org.jetbrains.kotlin.load.java.structure.JavaType
@@ -24,7 +25,7 @@ import kotlin.collections.map
 import kotlin.jvm.javaClass
 
 class JCMethod<out T : JCTree.JCMethodDecl>(tree: T,
-                                            treePath: List<JCTree>) : JCMember<T>(tree, treePath), JavaMethod {
+                                            treePath: TreePath) : JCMember<T>(tree, treePath), JavaMethod {
 
     override val name = Name.identifier(tree.name.toString())
 
@@ -37,11 +38,11 @@ class JCMethod<out T : JCTree.JCMethodDecl>(tree: T,
     override val visibility = tree.modifiers.visibility
 
     override val typeParameters
-        get() = tree.typeParameters.map { JCTypeParameter(it, treePath.newTreePath(it)) }
+        get() = tree.typeParameters.map { JCTypeParameter(it, TreePath(treePath, it)) }
 
     override val valueParameters
         get() = tree.parameters
-                .map { JCValueParameter(it, treePath.newTreePath(it)) }
+                .map { JCValueParameter(it, TreePath(treePath, it)) }
 
     override val returnType: JavaType
         get() = JCType.create(tree.returnType, treePath)

@@ -29,7 +29,10 @@ import javax.tools.SimpleJavaFileObject
 class JavacTest : KtUsefulTestCase() {
 
     fun testCommon() {
-        ExtendedJavac.getTrees(listOf(KotlinFileObject4()))
+        ExtendedJavac.getTrees(listOf(KotlinFileObject(),
+                                      KotlinFileObject2(),
+                                      KotlinFileObject3(),
+                                      KotlinFileObject4()))
     }
 
     private fun getAllJavaFilesFromDir(dir: String): List<File> {

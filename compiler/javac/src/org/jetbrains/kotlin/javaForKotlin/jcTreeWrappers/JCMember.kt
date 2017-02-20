@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaMember
@@ -23,10 +24,10 @@ import org.jetbrains.kotlin.name.FqName
 import kotlin.let
 
 abstract class JCMember<out T : JCTree>(tree: T,
-                                        treePath: List<JCTree>) : JCElement<T>(tree, treePath), JavaMember {
+                                        treePath: TreePath) : JCElement<T>(tree, treePath), JavaMember {
 
     override val containingClass
-        get() = (treePath[1] as JCTree.JCClassDecl).let { JCClass(it, treePath.newTreePath()) }
+        get() = (treePath.parentPath.leaf as JCTree.JCClassDecl).let { JCClass(it, TreePath(treePath, it)) }
 
     override val isDeprecatedInJavaDoc = false
 

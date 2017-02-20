@@ -17,12 +17,13 @@
 package org.jetbrains.kotlin.javaForKotlin.jcTreeWrappers
 
 import com.sun.source.tree.Tree
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.load.java.structure.JavaType
 import org.jetbrains.kotlin.load.java.structure.JavaWildcardType
 
 class JCWildcardType<out T : JCTree.JCWildcard>(tree: T,
-                                                treePath: List<JCTree>) : JCType<T>(tree, treePath), JavaWildcardType {
+                                                treePath: TreePath) : JCType<T>(tree, treePath), JavaWildcardType {
 
     override val bound: JavaType?
         get() = JCType.create(tree.bound, treePath)
