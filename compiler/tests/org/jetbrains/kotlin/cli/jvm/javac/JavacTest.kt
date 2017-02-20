@@ -41,7 +41,7 @@ class JavacTest : KtUsefulTestCase() {
                               KotlinFileObject4()))
 
         val clazz = classFinder.findClass(ClassId(FqName("pack"), FqName("Singleton"), false))
-        println(clazz?.annotations)
+        println(clazz?.methods?.flatMap { it.annotations.map { it.classId } })
     }
 
     private fun getAllJavaFilesFromDir(dir: String): List<File> {
@@ -78,7 +78,7 @@ private class KotlinFileObject2 : SimpleJavaFileObject(URI("pack/Singleton.java"
             "" +
             "private Boolean getBooleanField() { return field; }" +
             "" +
-            "private StaticClass getStaticClass() { return new StaticClass(); }" +
+            "@Deprecated private StaticClass getStaticClass() { return new StaticClass(); }" +
             "" +
             "@Override public boolean getField(String args) { return field; }" +
             "" +

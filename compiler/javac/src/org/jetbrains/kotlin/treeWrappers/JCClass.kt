@@ -35,9 +35,9 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val name = SpecialNames.safeIdentifier(tree.simpleName.toString())
 
     override val annotations: Collection<JavaAnnotation>
-        get() = emptyList()
+        get() = treePath.annotations.map { JCAnnotation(it, TreePath.getPath(treePath.compilationUnit, it), javac) }
 
-    override fun findAnnotation(fqName: FqName): JavaAnnotation? = null
+    override fun findAnnotation(fqName: FqName) = annotations.firstOrNull { it.classId?.asSingleFqName() == fqName }
 
     override val isAbstract = tree.modifiers.isAbstract
 
