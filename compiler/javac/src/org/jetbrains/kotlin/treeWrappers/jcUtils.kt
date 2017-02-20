@@ -20,6 +20,7 @@ import com.sun.source.tree.AnnotationTree
 import com.sun.source.util.TreePath
 import com.sun.source.util.TreePathScanner
 import com.sun.tools.javac.tree.JCTree
+import org.jetbrains.kotlin.Javac
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.load.java.JavaVisibilities
 import javax.lang.model.element.Modifier
@@ -47,6 +48,38 @@ val JCTree.JCModifiers.visibility
 
 val TreePath.annotations
         get() = AnnotationSearcher(this).get()
+
+fun TreePath.getFqName(javac: Javac): String {
+    val simpleName = leaf.toString().substringBefore("<").substringAfter("@")
+    val compilationUnit = compilationUnit as JCTree.JCCompilationUnit
+
+    val importStatement = compilationUnit.imports.firstOrNull { it.qualifiedIdentifier.toString().endsWith(".$simpleName") }
+    importStatement?.let { return it.qualifiedIdentifier.toString() }
+
+    fun JCTree.JCClassDecl.innerClasses(): List<JCTree.JCClassDecl> = arrayListOf(this).also {
+        it.addAll(members.filterIsInstance<JCTree.JCClassDecl>()
+                          .flatMap(JCTree.JCClassDecl::innerClasses))
+    }
+
+    compilationUnit.typeDecls
+            .filterIsInstance<JCTree.JCClassDecl>()
+            .flatMap(JCTree.JCClassDecl::innerClasses)
+            .filter {
+                it.simpleName.toString() == simpleName
+            }
+            .firstOrNull()
+            ?.let {
+                val type = JCClass(it, javac.getTreePath(it, compilationUnit), javac)
+                return type.fqName.asString()
+            }
+
+    javac.findClasses(simpleName)
+            .filter { it.fullname.toString().startsWith("java.lang.") }
+            .firstOrNull()
+            ?.let { return it.fullname.toString() }
+
+    return simpleName
+}
 
 class AnnotationSearcher(private val treePath: TreePath) : TreePathScanner<Unit, Unit>() {
 

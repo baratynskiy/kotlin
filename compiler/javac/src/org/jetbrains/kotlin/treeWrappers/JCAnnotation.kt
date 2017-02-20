@@ -21,7 +21,6 @@ import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.Javac
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
-import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaElement
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
@@ -36,9 +35,7 @@ class JCAnnotation(val annotation: JCTree.JCAnnotation,
     override val classId: ClassId?
         get() = annotation.computeClassId()
 
-    override fun resolve(): JavaClass? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun resolve() = javac.findClass(TreePath.getPath(treePath.compilationUnit, annotation.annotationType).getFqName(javac))
 
     private fun JCTree.JCAnnotation.computeClassId(): ClassId? {
 

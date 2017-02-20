@@ -31,7 +31,7 @@ abstract class ClassifierType<out T : JCTree>(tree: T,
         get() = getClassifier(treePath, javac)
 
     override val canonicalText: String
-        get() = getFqName(treePath, javac)
+        get() = treePath.getFqName(javac)
 
     override val presentableText: String
         get() = canonicalText
@@ -68,40 +68,8 @@ private fun isRaw(treePath: TreePath, javac: Javac): Boolean {
     return classifier.typeParameters.isNotEmpty()
 }
 
-private fun getFqName(treePath: TreePath, javac: Javac): String {
-    val simpleName = treePath.leaf.toString().substringBefore("<")
-    val compilationUnit = treePath.compilationUnit as JCTree.JCCompilationUnit
-
-    val importStatement = compilationUnit.imports.firstOrNull { it.qualifiedIdentifier.toString().endsWith(".$simpleName") }
-    importStatement?.let { return it.qualifiedIdentifier.toString() }
-
-    fun JCTree.JCClassDecl.innerClasses(): List<JCTree.JCClassDecl> = arrayListOf(this).also {
-        it.addAll(members.filterIsInstance<JCTree.JCClassDecl>()
-                          .flatMap(JCTree.JCClassDecl::innerClasses))
-    }
-
-    compilationUnit.typeDecls
-            .filterIsInstance<JCTree.JCClassDecl>()
-            .flatMap(JCTree.JCClassDecl::innerClasses)
-            .filter {
-                it.simpleName.toString() == simpleName
-            }
-            .firstOrNull()
-            ?.let {
-                val type = JCClass(it, javac.getTreePath(it, compilationUnit), javac)
-                return type.fqName.asString()
-            }
-
-    javac.findClasses(simpleName)
-            .filter { it.fullname.toString().startsWith("java.lang.") }
-            .firstOrNull()
-            ?.let { return it.fullname.toString() }
-
-    return simpleName
-}
-
 private fun getClassifier(treePath: TreePath, javac: Javac): JavaClassifier? {
-    val fqName = getFqName(treePath, javac)
+    val fqName = treePath.getFqName(javac)
 
     return javac.findClass(fqName)
 }
