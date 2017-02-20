@@ -17,7 +17,10 @@
 package org.jetbrains.kotlin.cli.jvm.javac
 
 import com.intellij.openapi.util.io.FileUtil
-import org.jetbrains.kotlin.ExtendedJavac
+import org.jetbrains.kotlin.ClassFinder
+import org.jetbrains.kotlin.Javac
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.test.testFramework.KtUsefulTestCase
 import org.jetbrains.kotlin.utils.addToStdlib.check
 import java.io.File
@@ -29,10 +32,16 @@ import javax.tools.SimpleJavaFileObject
 class JavacTest : KtUsefulTestCase() {
 
     fun testCommon() {
-        ExtendedJavac.getTrees(listOf(KotlinFileObject(),
-                                      KotlinFileObject2(),
-                                      KotlinFileObject3(),
-                                      KotlinFileObject4()))
+        val javac = Javac()
+        val classFinder = ClassFinder(javac)
+
+        javac.parse(listOf(KotlinFileObject(),
+                              KotlinFileObject2(),
+                              KotlinFileObject3(),
+                              KotlinFileObject4()))
+
+        val clazz = classFinder.findClass(ClassId(FqName("pack"), FqName("Singleton"), false))
+        println(clazz?.annotations)
     }
 
     private fun getAllJavaFilesFromDir(dir: String): List<File> {
@@ -57,7 +66,7 @@ private class KotlinFileObject2 : SimpleJavaFileObject(URI("pack/Singleton.java"
 
     override fun getCharContent(ignoreEncodingErrors: Boolean) =
             "package pack; " +
-            "@Deprecated public class Singleton implements java.util.List {" +
+            "@Deprecated public class Singleton implements java.util.List<String> {" +
             "" +
             "public static Singleton INSTANCE = new Singleton();" +
             "" +
