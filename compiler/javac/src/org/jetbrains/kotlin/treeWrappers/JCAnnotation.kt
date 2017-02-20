@@ -21,9 +21,9 @@ import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.Javac
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaElement
 import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.FqName
 
 class JCAnnotation(val annotation: JCTree.JCAnnotation,
                    val treePath: TreePath,
@@ -33,14 +33,18 @@ class JCAnnotation(val annotation: JCTree.JCAnnotation,
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
     override val classId: ClassId?
-        get() = annotation.computeClassId()
+        get() = resolve()?.computeClassId()
 
     override fun resolve() = javac.findClass(TreePath.getPath(treePath.compilationUnit, annotation.annotationType).getFqName(javac))
 
-    private fun JCTree.JCAnnotation.computeClassId(): ClassId? {
+    private fun JavaClass.computeClassId(): ClassId? {
+        val outer = outerClass
+        outer?.let {
+            val parentClassId = outer.computeClassId() ?: return null
+            return parentClassId.createNestedClassId(this.name)
+        }
 
-
-        return ClassId.topLevel(FqName(toString()))
+        return fqName?.let { ClassId.topLevel(it) }
     }
 
 }

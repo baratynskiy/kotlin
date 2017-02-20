@@ -51,7 +51,9 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
         get() = tree.typeParameters.map { JCTypeParameter(it, TreePath(treePath, it), javac) }
 
     override val fqName
-        get() = treePath.reversed().joinToString(separator = ".") { (it as? JCTree.JCCompilationUnit)?.packageName?.toString() ?: (it as JCTree.JCClassDecl).name }
+        get() =  treePath.reversed()
+                .joinToString(separator = ".") { (it as? JCTree.JCCompilationUnit)?.packageName?.toString()
+                                                 ?: (it as JCTree.JCClassDecl).name }
                 .let(::FqName)
 
     override val supertypes
@@ -72,7 +74,7 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                 .map { JCClass(it, TreePath(treePath, it), javac) }
 
     override val outerClass
-        get() = (treePath.firstOrNull() as? JCTree.JCClassDecl)?.let { JCClass<JCTree.JCClassDecl>(it, treePath.parentPath, javac) }
+        get() = (treePath.parentPath.leaf as? JCTree.JCClassDecl)?.let { JCClass<JCTree.JCClassDecl>(it, treePath.parentPath, javac) }
 
     override val isInterface = tree.modifiers.flags and Flags.INTERFACE.toLong() != 0L
 
