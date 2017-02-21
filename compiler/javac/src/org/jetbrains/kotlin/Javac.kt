@@ -38,7 +38,7 @@ import javax.tools.JavaFileManager
 import com.sun.tools.javac.util.List as JavacList
 import javax.tools.JavaFileObject
 
-class Javac {
+class Javac(private val javaFiles: Collection<File>) {
 
     private val context = Context()
     private val javac by lazy { JavaCompiler(context) }
@@ -46,31 +46,23 @@ class Javac {
     private val symbols by lazy { Symtab.instance(context) }
     private val trees by lazy { JavacTrees.instance(context) }
 
-    private val javaClasses = arrayListOf<JavaClass>()
-    private val javaPackages = hashSetOf<JavaPackage>()
-
-    fun parse(files: Collection<File>) {
+    private val compilationUnits by lazy {
         JavacFileManager.preRegister(context)
 
-        val fileManager = context[JavaFileManager::class.java] as? JavacFileManager ?: return
-        val fileObjects = files.map { fileManager.getRegularFile(it) }
+        val fileManager = context[JavaFileManager::class.java] as? JavacFileManager
+                          ?: return@lazy emptyList<JCTree.JCCompilationUnit>()
+        val fileObjects = javaFiles.map { fileManager.getRegularFile(it) }.toJavacList()
 
-        parse(fileObjects)
+        javac.parseFiles(fileObjects)
     }
 
-    fun parse(fileObjects: List<JavaFileObject>) {
-        val javacList = fileObjects.toJavacList()
+    private val javaClasses by lazy {
+        compilationUnits.flatMap { it.typeDecls.map { typeDecl -> Pair(it, typeDecl) } }
+                .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
+    }
 
-        val compilationUnits = javac.parseFiles(javacList)
-
-        compilationUnits.forEach { compilationUnit ->
-            JCPackage(compilationUnit.packageName.toString(), this).let { javaPackages.add(it) }
-
-            compilationUnit.typeDecls.forEach { type ->
-                val treePath = trees.getPath(compilationUnit, type)
-                JCClass(type as JCTree.JCClassDecl, treePath, this).let { javaClasses.add(it) }
-            }
-        }
+    private val javaPackages by lazy {
+        compilationUnits.map { JCPackage(it.packageName.toString(), this) }
     }
 
     fun findClasses(simpleName: String) = symbols.classes
@@ -83,22 +75,28 @@ class Javac {
 
     fun findSubPackages(pack: JavaPackage) = javaPackages.filter { it.fqName.isSubpackageOf(pack.fqName) }
 
-    fun findPackageClasses(pack: JavaPackage) = javaClasses.filter { it.fqName?.isChildOf(pack.fqName) ?: false }
+    fun findPackageClasses(pack: JavaPackage) = javaClasses.filter { it.fqName.isChildOf(pack.fqName) }
 
     fun getTreePath(tree: JCTree, compilationUnit: CompilationUnitTree): TreePath = trees.getPath(compilationUnit, tree)
 
-    fun findClass(fqName: String) = javaClasses
-            .filter { it.fqName != null && fqName.startsWith(it.fqName!!.asString()) }
-            .firstOrNull()
-            ?.let {
-                if (it.fqName?.asString() == fqName) {
-                    it
-                } else {
-                    it.allInnerClasses().firstOrNull { it.fqName?.asString() == fqName }
-                }
-            } ?: findClassInSymbols(fqName)
+    fun findClass(fqName: String): JavaClass? {
+        val vl =  javaClasses
+                       .filter { fqName.startsWith(it.fqName.asString()) }
+                       .firstOrNull()
+                       ?.let {
+                           if (it.fqName.asString() == fqName) {
+                               it
+                           } else {
+                               it.allInnerClasses().firstOrNull { it.fqName?.asString() == fqName }
+                           }
+                       } ?: findClassInSymbols(fqName)
+        return vl
+    }
 
-    fun findPackage(fqName: String) = javaPackages.find { it.fqName.asString() == fqName } ?: findPackageInSymbols(fqName)
+    fun findPackage(fqName: String): JavaPackage? {
+        val vl = javaPackages.find { it.fqName.asString() == fqName } ?: findPackageInSymbols(fqName)
+        return vl
+    }
 
     private fun List<JavaFileObject>.toJavacList() = JavacList.from(toTypedArray())
 

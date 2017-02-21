@@ -16,16 +16,44 @@
 
 package org.jetbrains.kotlin
 
+import com.intellij.openapi.project.Project
+import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.load.java.JavaClassFinder
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.resolve.BindingTrace
+import org.jetbrains.kotlin.resolve.CodeAnalyzerInitializer
+import org.jetbrains.kotlin.resolve.lazy.KotlinCodeAnalyzer
+import javax.annotation.PostConstruct
+import javax.inject.Inject
 
-class ClassFinder(val javac: Javac) : JavaClassFinder {
+class ClassFinder : JavaClassFinder {
+
+    lateinit var proj: Project
+    lateinit var baseScope: GlobalSearchScope
+    lateinit var javac: Javac
+
+    @Inject
+    fun setProject(project: Project) {
+        proj = project
+        javac = project.getComponent(Javac::class.java)
+    }
+
+    @Inject
+    fun setScope(scope: GlobalSearchScope) {
+        baseScope = scope
+    }
 
     override fun findClass(classId: ClassId) = javac.findClass(classId.asSingleFqName().asString())
 
     override fun findPackage(fqName: FqName) = javac.findPackage(fqName.asString())
 
     override fun knownClassNamesInPackage(packageFqName: FqName) = null
+
+    @PostConstruct
+    fun initialize(trace: BindingTrace, codeAnalyzer: KotlinCodeAnalyzer) {
+        CodeAnalyzerInitializer.getInstance(proj).initialize(trace, codeAnalyzer.moduleDescriptor, codeAnalyzer)
+    }
+
 
 }

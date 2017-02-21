@@ -59,6 +59,7 @@ import com.intellij.psi.stubs.BinaryFileStubBuilders
 import com.intellij.psi.util.JavaClassSupers
 import com.intellij.util.io.URLUtil
 import org.jetbrains.annotations.TestOnly
+import org.jetbrains.kotlin.Javac
 import org.jetbrains.kotlin.asJava.LightClassGenerationSupport
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
 import org.jetbrains.kotlin.asJava.finder.JavaElementFinder
@@ -103,6 +104,7 @@ import org.jetbrains.kotlin.resolve.lazy.declarations.DeclarationProviderFactory
 import org.jetbrains.kotlin.script.KotlinScriptDefinitionProvider
 import org.jetbrains.kotlin.script.KotlinScriptExternalImportsProvider
 import org.jetbrains.kotlin.utils.PathUtil
+import org.jetbrains.kotlin.utils.addToStdlib.check
 import java.io.File
 import java.lang.IllegalStateException
 import java.util.*
@@ -189,7 +191,30 @@ class KotlinCoreEnvironment private constructor(
         for (registrar in configuration.getList(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS)) {
             registrar.registerProjectComponents(project, configuration)
         }
+
+//        project.registerService(Javac::class.java, Javac(javaFiles))
     }
+
+    //temporary------------------------------
+    private val VirtualFile.javaFiles: List<VirtualFile>
+        get() = children.filter { it.extension == "java" }
+                .toMutableList()
+                .apply {
+                    children
+                            .filter(VirtualFile::isDirectory)
+                            .forEach { dir -> addAll(dir.javaFiles) }
+                }
+
+    private val javaFiles
+        get() = configuration.kotlinSourceRoots
+                .mapNotNull { findLocalDirectory(it) }
+                .flatMap { it.javaFiles }
+                .map { File(it.canonicalPath) }
+
+    fun registerJavacForTest(files: List<File>) {
+        projectEnvironment.project.registerService(Javac::class.java, Javac(files))
+    }
+    //---------------------------------------
 
     private val applicationEnvironment: CoreApplicationEnvironment
         get() = projectEnvironment.environment

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 JetBrains s.r.o.
+ * Copyright 2010-2017 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.load.kotlin
+package org.jetbrains.kotlin
 
 import org.jetbrains.kotlin.load.java.structure.JavaClass
-import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
-import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.utils.sure
+import org.jetbrains.kotlin.load.kotlin.KotlinBinaryClassCache
+import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
+import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClassFinder
+import org.jetbrains.kotlin.treeWrappers.computeClassId
 
-abstract class VirtualFileKotlinClassFinder : JvmVirtualFileFinder {
-    override fun findKotlinClass(classId: ClassId): KotlinJvmBinaryClass? {
-        val file = findVirtualFileWithHeader(classId) ?: return null
-        return KotlinBinaryClassCache.getKotlinBinaryClass(file)
-    }
+
+abstract class JCVirtualFileKotlinClassFinder : VirtualFileKotlinClassFinder() {
 
     override fun findKotlinClass(javaClass: JavaClass): KotlinJvmBinaryClass? {
-        var file = (javaClass as? JavaClassImpl)?.psi?.containingFile?.virtualFile ?: return null
+        var file = javaClass.computeClassId()?.let { findVirtualFileWithHeader(it) } ?: return null
+
         if (javaClass.outerClass != null) {
             // For nested classes we get a file of the containing class, to get the actual class file for A.B.C,
             // we take the file for A, take its parent directory, then in this directory we look for A$B$C.class
@@ -38,9 +37,5 @@ abstract class VirtualFileKotlinClassFinder : JvmVirtualFileFinder {
         return KotlinBinaryClassCache.getKotlinBinaryClass(file)
     }
 
-    protected fun classFileName(jClass: JavaClass): String {
-        val outerClass = jClass.outerClass ?: return jClass.name.asString()
-
-        return classFileName(outerClass) + "$" + jClass.name.asString()
-    }
+    inline fun <T : Any> T?.sure(message: () -> String): T = this ?: throw AssertionError(message())
 }

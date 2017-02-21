@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.cli.jvm.compiler
 
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.GlobalSearchScope
+import org.jetbrains.kotlin.JCVirtualFileKotlinClassFinder
 import org.jetbrains.kotlin.builtins.BuiltInSerializerProtocol
 import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndex
@@ -32,7 +33,7 @@ import java.io.InputStream
 class JvmCliVirtualFileFinder(
         private val index: JvmDependenciesIndex,
         private val scope: GlobalSearchScope
-) : VirtualFileKotlinClassFinder() {
+) : JCVirtualFileKotlinClassFinder()/*VirtualFileKotlinClassFinder()*/ {
     override fun findVirtualFileWithHeader(classId: ClassId): VirtualFile? =
             findBinaryClass(classId, classId.relativeClassName.asString().replace('.', '$') + ".class")
 

@@ -16,27 +16,21 @@
 
 package org.jetbrains.kotlin.treeWrappers
 
-import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.Javac
-import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
-import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaElement
-import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 
-class JCAnnotation(val annotation: JCTree.JCAnnotation,
-                   val treePath: TreePath,
-                   val javac: Javac) : JavaElement, JavaAnnotation {
+open class JCAnnotationArgument(val tree: JCTree.JCExpression,
+                                fqName: FqName,
+                                val javac: Javac) : JavaAnnotationArgument, JavaElement {
 
-    override val arguments: Collection<JavaAnnotationArgument>
-        get() = annotation.arguments
-                .map { JCAnnotationArgument(it, FqName(it.toString()), javac) }
+    init {
+        println(tree::class.java)
+    }
 
-    override val classId: ClassId?
-        get() = resolve()?.computeClassId()
-
-    override fun resolve() = javac.findClass(TreePath.getPath(treePath.compilationUnit, annotation.annotationType).getFqName(javac))
+    override val name = Name.identifier(fqName.shortName().asString())
 
 }

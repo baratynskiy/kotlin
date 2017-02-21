@@ -23,6 +23,8 @@ import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.Javac
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.load.java.JavaVisibilities
+import org.jetbrains.kotlin.load.java.structure.JavaClass
+import org.jetbrains.kotlin.name.ClassId
 import javax.lang.model.element.Modifier
 
 val JCTree.JCModifiers.isAbstract
@@ -79,6 +81,16 @@ fun TreePath.getFqName(javac: Javac): String {
             ?.let { return it.fullname.toString() }
 
     return simpleName
+}
+
+fun JavaClass.computeClassId(): ClassId? {
+    val outer = outerClass
+    outer?.let {
+        val parentClassId = outer.computeClassId() ?: return null
+        return parentClassId.createNestedClassId(this.name)
+    }
+
+    return fqName?.let { ClassId.topLevel(it) }
 }
 
 class AnnotationSearcher(private val treePath: TreePath) : TreePathScanner<Unit, Unit>() {

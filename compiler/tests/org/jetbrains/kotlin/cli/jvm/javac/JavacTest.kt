@@ -32,17 +32,23 @@ import javax.tools.SimpleJavaFileObject
 class JavacTest : KtUsefulTestCase() {
 
     fun testCommon() {
-        val javac = Javac()
-        val classFinder = ClassFinder(javac)
+        val javaFiles = getJavaFiles()
+        val javac = Javac(javaFiles)
 
-        javac.parse(listOf(KotlinFileObject(),
-                              KotlinFileObject2(),
-                              KotlinFileObject3(),
-                              KotlinFileObject4()))
+        val classFinder = ClassFinder()
+        classFinder.javac = javac
 
         val clazz = classFinder.findClass(ClassId(FqName("pack"), FqName("Singleton"), false))
-        println(clazz?.methods?.flatMap { it.annotations.map { it.classId } })
+
+        println(clazz?.annotations?.map { it.classId })
     }
+
+    private fun getJavaFiles() = listOf(KotlinFileObject(),
+                                        KotlinFileObject2(),
+                                        KotlinFileObject3(),
+                                        KotlinFileObject4(),
+                                        KotlinFileObject5())
+            .map { fo -> File(fo.name).apply { FileUtil.writeToFile(this, fo.getCharContent(true).toString()) } }
 
     private fun getAllJavaFilesFromDir(dir: String): List<File> {
         val folder = File(dir).check { it.isDirectory } ?: return emptyList()
@@ -66,7 +72,11 @@ private class KotlinFileObject2 : SimpleJavaFileObject(URI("pack/Singleton.java"
 
     override fun getCharContent(ignoreEncodingErrors: Boolean) =
             "package pack; " +
-            "@Deprecated public class Singleton implements java.util.List<String> {" +
+            "" +
+            "import pack2.MyAnnotation;" +
+            "" +
+            "@MyAnnotation(name=\"name\") " +
+            "public class Singleton implements java.util.List<String> {" +
             "" +
             "public static Singleton INSTANCE = new Singleton();" +
             "" +
@@ -109,6 +119,18 @@ private class KotlinFileObject4 : SimpleJavaFileObject(URI("pack/SimpleClass.jav
             "private int smth = 1;" +
             "" +
             "private double[] smth2;" +
+            "" +
+            "}"
+
+}
+
+private class KotlinFileObject5 : SimpleJavaFileObject(URI("pack/MyAnnotation.java"), JavaFileObject.Kind.SOURCE) {
+
+    override fun getCharContent(ignoreEncodingErrors: Boolean) =
+            "package pack2; " +
+            "public @interface MyAnnotation {" +
+            "" +
+            "String name();" +
             "" +
             "}"
 

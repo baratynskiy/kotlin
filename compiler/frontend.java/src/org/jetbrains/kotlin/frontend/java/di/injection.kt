@@ -18,6 +18,9 @@ package org.jetbrains.kotlin.frontend.java.di
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
+import org.jetbrains.kotlin.ClassFinder
+import org.jetbrains.kotlin.MockJavaResolverCache
+import org.jetbrains.kotlin.MockJavaSourceElementFactory
 import org.jetbrains.kotlin.builtins.JvmBuiltInsPackageFragmentProvider
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.LanguageFeature
@@ -64,15 +67,18 @@ fun StorageComponentContainer.configureJavaTopDownAnalysis(
 
     useImpl<FileScopeProviderImpl>()
 
-    useImpl<JavaClassFinderImpl>()
+//    useImpl<JavaClassFinderImpl>()
+    useImpl<ClassFinder>()
     useImpl<SignaturePropagatorImpl>()
-    useImpl<LazyResolveBasedCache>()
+    useImpl<MockJavaResolverCache>()
+//    useImpl<LazyResolveBasedCache>()
     useImpl<TraceBasedErrorReporter>()
     useImpl<PsiBasedExternalAnnotationResolver>()
     useImpl<JavaPropertyInitializerEvaluatorImpl>()
     useInstance(SamWithReceiverResolver())
     useImpl<SamConversionResolverImpl>()
-    useImpl<JavaSourceElementFactoryImpl>()
+    useImpl<MockJavaSourceElementFactory>()
+//    useImpl<JavaSourceElementFactoryImpl>()
     useInstance(InternalFlexibleTypeTransformer)
 
     useInstance(languageVersionSettings)
@@ -112,7 +118,8 @@ fun createContainerForLazyResolveWithJava(
         useImpl<LazyResolveToken>()
     }
 }.apply {
-    get<JavaClassFinderImpl>().initialize(bindingTrace, get<KotlinCodeAnalyzer>())
+    get<ClassFinder>().initialize(bindingTrace, get<KotlinCodeAnalyzer>())
+//    get<JavaClassFinderImpl>().initialize(bindingTrace, get<KotlinCodeAnalyzer>())
 }
 
 
