@@ -37,4 +37,15 @@ class JavacPackage(val element: PackageElement, val javac: Javac) : JavaPackage 
                       && nameFilter(Name.identifier(it.simpleName.toString()))
             }
             .map { JavacClass(it, javac) }
+
+    override fun hashCode() = element.hashCode()
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is JavacPackage) return false
+
+        return element == other.element
+    }
+
+    override fun toString() = element.qualifiedName.toString()
+
 }

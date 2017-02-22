@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.frontend.java.di
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.ClassFinder
+import org.jetbrains.kotlin.MockJavaPropertyInitializerEvaluator
 import org.jetbrains.kotlin.MockJavaResolverCache
 import org.jetbrains.kotlin.MockJavaSourceElementFactory
 import org.jetbrains.kotlin.builtins.JvmBuiltInsPackageFragmentProvider
@@ -74,7 +75,8 @@ fun StorageComponentContainer.configureJavaTopDownAnalysis(
 //    useImpl<LazyResolveBasedCache>()
     useImpl<TraceBasedErrorReporter>()
     useImpl<PsiBasedExternalAnnotationResolver>()
-    useImpl<JavaPropertyInitializerEvaluatorImpl>()
+    useImpl<MockJavaPropertyInitializerEvaluator>()
+//    useImpl<JavaPropertyInitializerEvaluatorImpl>()
     useInstance(SamWithReceiverResolver())
     useImpl<SamConversionResolverImpl>()
     useImpl<MockJavaSourceElementFactory>()

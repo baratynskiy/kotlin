@@ -16,13 +16,15 @@
 
 package org.jetbrains.kotlin
 
+import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.project.Project
 import com.sun.source.tree.CompilationUnitTree
 import com.sun.source.util.TreePath
 import com.sun.tools.javac.api.JavacTrees
-import com.sun.tools.javac.code.Symbol
 import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.main.JavaCompiler
 import com.sun.tools.javac.file.JavacFileManager
+import com.sun.tools.javac.model.JavacElements
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.util.Context
 import com.sun.tools.javac.util.Names
@@ -38,8 +40,8 @@ import org.jetbrains.kotlin.name.isSubpackageOf
 import java.io.File
 import javax.lang.model.element.PackageElement
 import javax.tools.JavaFileManager
+import javax.tools.StandardLocation
 import com.sun.tools.javac.util.List as JavacList
-import javax.tools.JavaFileObject
 
 class Javac(private val javaFiles: Collection<File>,
             private val classPathRoots: List<File>) {
@@ -51,24 +53,29 @@ class Javac(private val javaFiles: Collection<File>,
     private val names by lazy { Names.instance(context) }
     private val symbols by lazy { Symtab.instance(context) }
     private val trees by lazy { JavacTrees.instance(context) }
+    private val elements by lazy { JavacElements.instance(context) }
 
     private val compilationUnits by lazy {
         JavacFileManager.preRegister(context)
 
         val fileManager = context[JavaFileManager::class.java] as? JavacFileManager
                           ?: return@lazy emptyList<JCTree.JCCompilationUnit>()
-        val fileObjects = javaFiles.map { fileManager.getRegularFile(it) }.toJavacList()
+        fileManager.setLocation(StandardLocation.CLASS_PATH, classPathRoots)
+
+        val fileObjects = fileManager.getJavaFileObjectsFromFiles(javaFiles).toList().toJavacList()
 
         javac.parseFiles(fileObjects)
     }
 
-    private val javaClasses by lazy {
+    private val javaClasses: ArrayList<JavaClass> by lazy {
         compilationUnits.flatMap { it.typeDecls.map { type -> Pair(it, type) } }
                 .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
+                .mapTo(arrayListOf<JavaClass>()) { it }
     }
 
-    private val javaPackages by lazy {
+    private val javaPackages: ArrayList<JavaPackage> by lazy {
         compilationUnits.map { JCPackage(it.packageName.toString(), this) }
+                .mapTo(arrayListOf<JavaPackage>()) { it }
     }
 
     fun findClasses(simpleName: String) = symbols.classes
@@ -81,15 +88,15 @@ class Javac(private val javaFiles: Collection<File>,
 
     fun findSubPackages(pack: JavaPackage) = javaPackages.filter { it.fqName.isSubpackageOf(pack.fqName) }
 
-    fun findPackageClasses(pack: JavaPackage) = javaClasses.filter { it.fqName.isChildOf(pack.fqName) }
+    fun findPackageClasses(pack: JavaPackage) = javaClasses.filter { it.fqName!!.isChildOf(pack.fqName) }
 
     fun getTreePath(tree: JCTree, compilationUnit: CompilationUnitTree): TreePath = trees.getPath(compilationUnit, tree)
 
     fun findClass(fqName: String) = javaClasses
-                   .filter { fqName.startsWith(it.fqName.asString()) }
+                   .filter { fqName.startsWith(it.fqName!!.asString()) }
                    .firstOrNull()
                    ?.let {
-                       if (it.fqName.asString() == fqName) {
+                       if (it.fqName!!.asString() == fqName) {
                            it
                        } else {
                            it.allInnerClasses().firstOrNull { it.fqName?.asString() == fqName }
@@ -104,12 +111,18 @@ class Javac(private val javaFiles: Collection<File>,
         innerClasses.forEach { inner -> it.addAll(inner.allInnerClasses()) }
     }
 
-    private fun findClassInSymbols(fqName: String): JavacClass<Symbol.ClassSymbol>? {
-        val name = names.fromString(fqName)
-        val cl = symbols.classes[name]
-        return cl?.let { JavacClass(it, this) }
-    }
+    private fun findClassInSymbols(fqName: String) = elements.getTypeElement(fqName)
+            ?.let { JavacClass(it, this) }
+            ?.also { javaClasses.add(it) }
 
-    private fun findPackageInSymbols(fqName: String) = symbols.packages[names.fromString(fqName)]?.let { JavacPackage(it, this) }
+    private fun findPackageInSymbols(fqName: String) = elements.getPackageElement(fqName)
+            ?.let { JavacPackage(it, this) }
+            ?.also { javaPackages.add(it) }
+
+    companion object {
+        fun getInstance(project: Project): Javac {
+            return ServiceManager.getService(project, Javac::class.java)
+        }
+    }
 
 }

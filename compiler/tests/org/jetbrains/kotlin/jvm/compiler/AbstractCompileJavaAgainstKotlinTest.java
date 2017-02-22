@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.jvm.compiler;
 
+import com.google.common.collect.Lists;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.kotlin.analyzer.AnalysisResult;
@@ -77,6 +78,8 @@ public abstract class AbstractCompileJavaAgainstKotlinTest extends TestCaseWithT
                 newConfiguration(ConfigurationKind.ALL, TestJdkKind.MOCK_JDK, getAnnotationsJar(), out),
                 EnvironmentConfigFiles.JVM_CONFIG_FILES
         );
+
+        environment.registerJavacForTest(Lists.newArrayList(javaFile));
 
         AnalysisResult analysisResult = JvmResolveUtil.analyze(environment);
         PackageViewDescriptor packageView = analysisResult.getModuleDescriptor().getPackage(LoadDescriptorUtil.TEST_PACKAGE_FQNAME);

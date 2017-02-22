@@ -249,4 +249,12 @@ class LazyJavaClassDescriptor(
     ) = LazyJavaClassDescriptor(
             c.replaceComponents(c.components.replace(javaResolverCache = javaResolverCache)),
             containingDeclaration, jClass, additionalSupertypeClassDescriptor)
+
+    override fun hashCode() = jClass.hashCode()
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is LazyJavaClassDescriptor) return false
+
+        return jClass == other.jClass
+    }
 }

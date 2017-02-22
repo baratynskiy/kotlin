@@ -19,6 +19,7 @@ package org.jetbrains.kotlin
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.load.java.JavaClassFinder
+import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.BindingTrace
@@ -52,7 +53,7 @@ class ClassFinder : JavaClassFinder {
     @PostConstruct
     fun initialize(trace: BindingTrace, codeAnalyzer: KotlinCodeAnalyzer) {
         CodeAnalyzerInitializer.getInstance(proj).initialize(trace, codeAnalyzer.moduleDescriptor, codeAnalyzer)
-        javac = proj.getComponent(Javac::class.java)
+        javac = Javac.getInstance(proj)
     }
 
 }

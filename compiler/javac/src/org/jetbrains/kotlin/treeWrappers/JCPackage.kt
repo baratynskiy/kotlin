@@ -41,4 +41,6 @@ class JCPackage(val name: String, val javac: Javac) : JavaPackage {
 
     override fun hashCode() = name.hashCode()
 
+    override fun toString() = name
+
 }
