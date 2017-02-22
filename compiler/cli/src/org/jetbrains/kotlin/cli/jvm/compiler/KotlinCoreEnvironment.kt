@@ -71,10 +71,7 @@ import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.*
 import org.jetbrains.kotlin.cli.common.toBooleanLenient
 import org.jetbrains.kotlin.cli.jvm.JvmRuntimeVersionsConsistencyChecker
-import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
-import org.jetbrains.kotlin.cli.jvm.config.JvmClasspathRoot
-import org.jetbrains.kotlin.cli.jvm.config.JvmContentRoot
-import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.cli.jvm.config.*
 import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndex
@@ -212,7 +209,7 @@ class KotlinCoreEnvironment private constructor(
                 .map { File(it.canonicalPath) }
 
     fun registerJavacForTest(files: List<File>) {
-        projectEnvironment.project.registerService(Javac::class.java, Javac(files))
+        projectEnvironment.project.registerService(Javac::class.java, Javac(files, configuration.jvmClasspathRoots))
     }
     //---------------------------------------
 

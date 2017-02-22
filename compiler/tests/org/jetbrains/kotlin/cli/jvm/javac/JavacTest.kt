@@ -33,7 +33,7 @@ class JavacTest : KtUsefulTestCase() {
 
     fun testCommon() {
         val javaFiles = getJavaFiles()
-        val javac = Javac(javaFiles)
+        val javac = Javac(javaFiles, emptyList())
 
         val classFinder = ClassFinder()
         classFinder.javac = javac

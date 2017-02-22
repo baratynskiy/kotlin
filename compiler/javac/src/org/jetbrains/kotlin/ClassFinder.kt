@@ -36,7 +36,6 @@ class ClassFinder : JavaClassFinder {
     @Inject
     fun setProject(project: Project) {
         proj = project
-        javac = project.getComponent(Javac::class.java)
     }
 
     @Inject
@@ -53,7 +52,7 @@ class ClassFinder : JavaClassFinder {
     @PostConstruct
     fun initialize(trace: BindingTrace, codeAnalyzer: KotlinCodeAnalyzer) {
         CodeAnalyzerInitializer.getInstance(proj).initialize(trace, codeAnalyzer.moduleDescriptor, codeAnalyzer)
+        javac = proj.getComponent(Javac::class.java)
     }
-
 
 }
