@@ -63,6 +63,14 @@ fun TreePath.getFqName(javac: Javac): String {
                           .flatMap(JCTree.JCClassDecl::innerClasses))
     }
 
+    val isInner = simpleName.contains(".")
+    if (isInner) {
+        val packageName = compilationUnit.packageName.toString()
+        val fqName = "$packageName.$simpleName"
+
+        return javac.findClass(fqName)?.fqName?.asString() ?: simpleName
+    }
+
     compilationUnit.typeDecls
             .filterIsInstance<JCTree.JCClassDecl>()
             .flatMap(JCTree.JCClassDecl::innerClasses)
@@ -76,7 +84,7 @@ fun TreePath.getFqName(javac: Javac): String {
             }
 
     javac.findClasses(simpleName)
-            .filter { it.fullname.toString().startsWith("java.lang.") }
+            //.filter { it.fullname.toString().startsWith("java.lang.") }
             .firstOrNull()
             ?.let { return it.fullname.toString() }
 

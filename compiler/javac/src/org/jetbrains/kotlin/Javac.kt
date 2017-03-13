@@ -19,7 +19,6 @@ package org.jetbrains.kotlin
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.sun.source.tree.CompilationUnitTree
-import com.sun.source.util.TreePath
 import com.sun.tools.javac.api.JavacTrees
 import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.main.JavaCompiler
@@ -90,7 +89,7 @@ class Javac(private val javaFiles: Collection<File>,
 
     fun findPackageClasses(pack: JavaPackage) = javaClasses.filter { it.fqName!!.isChildOf(pack.fqName) }
 
-    fun getTreePath(tree: JCTree, compilationUnit: CompilationUnitTree): TreePath = trees.getPath(compilationUnit, tree)
+    fun getTreePath(tree: JCTree, compilationUnit: CompilationUnitTree) = trees.getPath(compilationUnit, tree)
 
     fun findClass(fqName: String) = javaClasses
                    .filter { fqName.startsWith(it.fqName!!.asString()) }
