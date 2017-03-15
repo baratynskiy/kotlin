@@ -31,7 +31,14 @@ abstract class JavacMember<out T : Element>(element: T,
     override val containingClass: JavaClass
         get() = JavacClass((element.enclosingElement as TypeElement), javac)
 
-    override val annotations = emptyList<JavaAnnotation>()
+    override val annotations: Collection<JavaAnnotation>
+        get() = element.annotationMirrors
+                .map { JavacAnnotation(it, javac) }
+
+    override fun findAnnotation(fqName: FqName): JavaAnnotation? = element.annotationMirrors
+            .filter { it.toString() == fqName.asString() }
+            .firstOrNull()
+            ?.let { JavacAnnotation(it, javac) }
 
     override val visibility
         get() = element.getVisibility()
@@ -46,8 +53,6 @@ abstract class JavacMember<out T : Element>(element: T,
     override val isStatic = element.isStatic
 
     override val isFinal = element.isFinal
-
-    override fun findAnnotation(fqName: FqName) = null
 
 }
 
