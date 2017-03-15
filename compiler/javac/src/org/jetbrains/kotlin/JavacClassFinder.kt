@@ -48,7 +48,13 @@ class JavacClassFinder : JavaClassFinder {
     override fun findPackage(fqName: FqName) = javac.findPackage(fqName)
 
     override fun knownClassNamesInPackage(packageFqName: FqName) = javac.findClassesFromPackage(packageFqName)
-            .mapNotNull { it.fqName?.shortName()?.asString() }
+            .mapNotNull {
+                val fqName = it.fqName
+                if (fqName == null)
+                    null
+                else
+                    if (fqName.isRoot) fqName.asString() else fqName.shortName().asString()
+            }
             .toSet()
 
     @PostConstruct

@@ -16,29 +16,39 @@
 
 package org.jetbrains.kotlin.elementWrappers
 
+import com.sun.tools.javac.jvm.ClassReader
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.load.java.JavaVisibilities
 import javax.lang.model.element.Element
 import javax.lang.model.element.Modifier
 
 val Element.isAbstract
-        get() = modifiers.contains(Modifier.ABSTRACT)
+        get() = safeModifiers().contains(Modifier.ABSTRACT)
 
 val Element.isStatic
-        get() = modifiers.contains(Modifier.STATIC)
+        get() = safeModifiers().contains(Modifier.STATIC)
 
 val Element.isFinal
-        get() = modifiers.contains(Modifier.FINAL)
+        get() = safeModifiers().contains(Modifier.FINAL)
 
 fun Element.getVisibility() = when {
-    modifiers.contains(Modifier.PUBLIC) -> Visibilities.PUBLIC
-    modifiers.contains(Modifier.PRIVATE) -> Visibilities.PRIVATE
-    modifiers.contains(Modifier.PROTECTED) -> {
-        if (modifiers.contains(Modifier.STATIC)) {
+    safeModifiers().contains(Modifier.PUBLIC) -> Visibilities.PUBLIC
+    safeModifiers().contains(Modifier.PRIVATE) -> Visibilities.PRIVATE
+    safeModifiers().contains(Modifier.PROTECTED) -> {
+        if (safeModifiers().contains(Modifier.STATIC)) {
             JavaVisibilities.PROTECTED_STATIC_VISIBILITY
         } else {
             JavaVisibilities.PROTECTED_AND_PACKAGE
         }
     }
     else -> JavaVisibilities.PACKAGE_VISIBILITY
+}
+
+// get modifiers in a safe way
+private fun Element.safeModifiers(): Set<Modifier> {
+    try {
+        return modifiers
+    } catch (ex: ClassReader.BadClassFile) {
+        return emptySet()
+    }
 }

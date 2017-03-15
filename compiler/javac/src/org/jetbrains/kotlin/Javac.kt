@@ -106,10 +106,11 @@ class Javac(private val javaFiles: Collection<File>,
 
     fun findClassesFromPackage(fqName: FqName) = javaClasses
             .filter { it.fqName?.isChildOf(fqName) ?: false }
-            .toMutableSet<JavaClass>()
+            .toMutableSet()
             .also {
                 elements.getPackageElement(fqName.asString())
-                        ?.enclosedElements
+                        ?.members()
+                        ?.elements
                         ?.filterIsInstance(TypeElement::class.java)
                         ?.map { JavacClass(it, this) }
                         ?.let { classes -> it.addAll(classes) }
