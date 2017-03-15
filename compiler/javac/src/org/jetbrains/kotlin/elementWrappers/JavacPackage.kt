@@ -29,14 +29,12 @@ class JavacPackage(val element: PackageElement, val javac: Javac) : JavaPackage 
         get() = element.qualifiedName.let { FqName(it.toString()) }
 
     override val subPackages
-        get() = javac.findSubPackages(element).map { JavacPackage(it, javac) }
+        get() = javac.findSubPackages(element.qualifiedName.toString().let(::FqName))
 
-    override fun getClasses(nameFilter: (Name) -> Boolean) = element.enclosedElements
-            .filterIsInstance(TypeElement::class.java)
-            .filter { Name.isValidIdentifier(it.simpleName.toString())
-                      && nameFilter(Name.identifier(it.simpleName.toString()))
+    override fun getClasses(nameFilter: (Name) -> Boolean) = javac.findClassesFromPackage(fqName)
+            .filter { Name.isValidIdentifier(it.name.toString())
+                      && nameFilter(Name.identifier(it.name.toString()))
             }
-            .map { JavacClass(it, javac) }
 
     override fun hashCode() = element.hashCode()
 

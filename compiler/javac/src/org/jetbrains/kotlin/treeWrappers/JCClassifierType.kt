@@ -20,7 +20,6 @@ import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.Javac
 import org.jetbrains.kotlin.load.java.structure.JavaClass
-import org.jetbrains.kotlin.load.java.structure.JavaClassifier
 import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
 import org.jetbrains.kotlin.load.java.structure.JavaType
 
@@ -31,7 +30,7 @@ abstract class ClassifierType<out T : JCTree>(tree: T,
         get() = getClassifier(treePath, javac)
 
     override val canonicalText
-        get() = treePath.getFqName(javac)
+        get() = treePath.getFqName(javac).asString()
 
     override val presentableText
         get() = canonicalText

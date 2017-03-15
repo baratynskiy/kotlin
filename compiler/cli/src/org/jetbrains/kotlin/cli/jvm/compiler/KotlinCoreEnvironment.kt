@@ -208,6 +208,7 @@ class KotlinCoreEnvironment private constructor(
                 .flatMap { it.javaFiles }
                 .map { File(it.canonicalPath) }
 
+    @TestOnly
     fun registerJavacForTest(files: List<File>) {
         projectEnvironment.project.registerService(Javac::class.java, Javac(files, configuration.jvmClasspathRoots))
     }

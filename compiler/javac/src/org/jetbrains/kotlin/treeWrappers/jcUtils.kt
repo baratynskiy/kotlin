@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.load.java.JavaVisibilities
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 import javax.lang.model.element.Modifier
 
 val JCTree.JCModifiers.isAbstract
@@ -51,12 +52,12 @@ val JCTree.JCModifiers.visibility
 val TreePath.annotations
         get() = AnnotationSearcher(this).get()
 
-fun TreePath.getFqName(javac: Javac): String {
+fun TreePath.getFqName(javac: Javac): FqName {
     val simpleName = leaf.toString().substringBefore("<").substringAfter("@")
     val compilationUnit = compilationUnit as JCTree.JCCompilationUnit
 
     val importStatement = compilationUnit.imports.firstOrNull { it.qualifiedIdentifier.toString().endsWith(".$simpleName") }
-    importStatement?.let { return it.qualifiedIdentifier.toString() }
+    importStatement?.let { return FqName(it.qualifiedIdentifier.toString()) }
 
     fun JCTree.JCClassDecl.innerClasses(): List<JCTree.JCClassDecl> = arrayListOf(this).also {
         it.addAll(members.filterIsInstance<JCTree.JCClassDecl>()
@@ -68,7 +69,7 @@ fun TreePath.getFqName(javac: Javac): String {
         val packageName = compilationUnit.packageName.toString()
         val fqName = "$packageName.$simpleName"
 
-        return javac.findClass(fqName)?.fqName?.asString() ?: simpleName
+        return javac.findClass(FqName(fqName))?.fqName ?: FqName(simpleName)
     }
 
     compilationUnit.typeDecls
@@ -80,15 +81,13 @@ fun TreePath.getFqName(javac: Javac): String {
             .firstOrNull()
             ?.let {
                 val type = JCClass(it, javac.getTreePath(it, compilationUnit), javac)
-                return type.fqName.asString()
+                return type.fqName
             }
 
-    javac.findClasses(simpleName)
-            .filter { it.fullname.toString().startsWith("java.lang.") }
-            .firstOrNull()
-            ?.let { return it.fullname.toString() }
+    javac.findClass(FqName("java.lang.$simpleName"))
+            ?.let { return it.fqName!! }
 
-    return simpleName
+    return FqName(simpleName)
 }
 
 fun JavaClass.computeClassId(): ClassId? {

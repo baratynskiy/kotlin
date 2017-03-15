@@ -43,13 +43,13 @@ class JavacClassFinder : JavaClassFinder {
         baseScope = scope
     }
 
-    override fun findClass(classId: ClassId) = javac.findClass(classId.asSingleFqName().asString())
+    override fun findClass(classId: ClassId) = javac.findClass(classId.asSingleFqName())
 
-    override fun findPackage(fqName: FqName) = javac.findPackage(fqName.asString())
+    override fun findPackage(fqName: FqName) = javac.findPackage(fqName)
 
-    override fun knownClassNamesInPackage(packageFqName: FqName) = javac.getAllClassesInPackage(packageFqName.asString())
-            ?.map { it.fqName.shortName().asString() }
-            ?.toSet()
+    override fun knownClassNamesInPackage(packageFqName: FqName) = javac.findClassesFromPackage(packageFqName)
+            .mapNotNull { it.fqName?.shortName()?.asString() }
+            .toSet()
 
     @PostConstruct
     fun initialize(trace: BindingTrace, codeAnalyzer: KotlinCodeAnalyzer) {

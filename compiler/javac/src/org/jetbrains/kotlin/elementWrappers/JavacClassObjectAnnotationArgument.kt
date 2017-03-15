@@ -18,11 +18,12 @@ package org.jetbrains.kotlin.elementWrappers
 
 import org.jetbrains.kotlin.Javac
 import org.jetbrains.kotlin.load.java.structure.JavaClassObjectAnnotationArgument
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 class JavacClassObjectAnnotationArgument(val javaClass : Class<*>, override val name : Name,
                                          val javac: Javac) : JavaClassObjectAnnotationArgument {
 
-    override fun getReferencedType() = JavacType.create((javac.findClass(javaClass.canonicalName) as JavacClass<*>).element.asType(), javac)
+    override fun getReferencedType() = JavacType.create((javac.findClass(FqName(javaClass.canonicalName)) as JavacClass<*>).element.asType(), javac)
 
 }

@@ -79,7 +79,7 @@ public abstract class AbstractCompileJavaAgainstKotlinTest extends TestCaseWithT
                 EnvironmentConfigFiles.JVM_CONFIG_FILES
         );
 
-        environment.registerJavacForTest(Lists.newArrayList(javaFile));
+        environment.registerJavacForTest(Collections.<File>emptyList());
 
         AnalysisResult analysisResult = JvmResolveUtil.analyze(environment);
         PackageViewDescriptor packageView = analysisResult.getModuleDescriptor().getPackage(LoadDescriptorUtil.TEST_PACKAGE_FQNAME);
