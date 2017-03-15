@@ -20,10 +20,11 @@ import org.jetbrains.kotlin.Javac
 import org.jetbrains.kotlin.load.java.structure.JavaClassObjectAnnotationArgument
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import javax.lang.model.type.TypeMirror
 
-class JavacClassObjectAnnotationArgument(val javaClass : Class<*>, override val name : Name,
+class JavacClassObjectAnnotationArgument(val type: TypeMirror, override val name : Name,
                                          val javac: Javac) : JavaClassObjectAnnotationArgument {
 
-    override fun getReferencedType() = JavacType.create((javac.findClass(FqName(javaClass.canonicalName)) as JavacClass<*>).element.asType(), javac)
+    override fun getReferencedType() = JavacType.create(type, javac)
 
 }

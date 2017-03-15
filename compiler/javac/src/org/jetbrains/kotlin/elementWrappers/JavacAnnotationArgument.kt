@@ -34,11 +34,9 @@ open class JavacAnnotationArgument(fqName: FqName,
         fun create(value: Any, name: Name, javac: Javac): JavaAnnotationArgument = when (value) {
             is AnnotationMirror -> JavacAnnotationAsAnnotationArgument(value, name, javac)
             is VariableElement -> JavacReferenceAnnotationArgument(value, javac)
-            is String -> JavacLiteralAnnotationArgument(value, name, javac)
-            is Class<*> -> JavacClassObjectAnnotationArgument(value, name, javac)
+            is TypeMirror -> JavacClassObjectAnnotationArgument(value, name, javac)
             is Collection<*> -> arrayAnnotationArguments(value, name, javac)
             is AnnotationValue -> create(value.value, name, javac)
-            is TypeMirror -> JavacLiteralAnnotationArgument(value.toString(), name, javac)
             else -> JavacLiteralAnnotationArgument(value, name, javac)
         }
 
