@@ -19,7 +19,6 @@ package org.jetbrains.kotlin
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.load.java.JavaClassFinder
-import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.BindingTrace
@@ -28,15 +27,15 @@ import org.jetbrains.kotlin.resolve.lazy.KotlinCodeAnalyzer
 import javax.annotation.PostConstruct
 import javax.inject.Inject
 
-class ClassFinder : JavaClassFinder {
+class JavacClassFinder : JavaClassFinder {
 
-    lateinit var proj: Project
-    lateinit var baseScope: GlobalSearchScope
-    lateinit var javac: Javac
+    private lateinit var project: Project
+    private lateinit var baseScope: GlobalSearchScope
+    private lateinit var javac: Javac
 
     @Inject
     fun setProject(project: Project) {
-        proj = project
+        this.project = project
     }
 
     @Inject
@@ -48,12 +47,14 @@ class ClassFinder : JavaClassFinder {
 
     override fun findPackage(fqName: FqName) = javac.findPackage(fqName.asString())
 
-    override fun knownClassNamesInPackage(packageFqName: FqName) = null
+    override fun knownClassNamesInPackage(packageFqName: FqName) = javac.getAllClassesInPackage(packageFqName.asString())
+            ?.map { it.fqName.shortName().asString() }
+            ?.toSet()
 
     @PostConstruct
     fun initialize(trace: BindingTrace, codeAnalyzer: KotlinCodeAnalyzer) {
-        CodeAnalyzerInitializer.getInstance(proj).initialize(trace, codeAnalyzer.moduleDescriptor, codeAnalyzer)
-        javac = Javac.getInstance(proj)
+        CodeAnalyzerInitializer.getInstance(project).initialize(trace, codeAnalyzer.moduleDescriptor, codeAnalyzer)
+        javac = Javac.getInstance(project)
     }
 
 }

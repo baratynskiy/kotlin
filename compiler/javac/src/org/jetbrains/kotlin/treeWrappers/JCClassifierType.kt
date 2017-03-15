@@ -27,13 +27,13 @@ import org.jetbrains.kotlin.load.java.structure.JavaType
 abstract class ClassifierType<out T : JCTree>(tree: T,
                                               treePath: TreePath,
                                               javac: Javac) : JCType<T>(tree, treePath, javac), JavaClassifierType {
-    override val classifier: JavaClassifier?
+    override val classifier
         get() = getClassifier(treePath, javac)
 
-    override val canonicalText: String
+    override val canonicalText
         get() = treePath.getFqName(javac)
 
-    override val presentableText: String
+    override val presentableText
         get() = canonicalText
 
 }
@@ -68,8 +68,4 @@ private fun isRaw(treePath: TreePath, javac: Javac): Boolean {
     return classifier.typeParameters.isNotEmpty()
 }
 
-private fun getClassifier(treePath: TreePath, javac: Javac): JavaClassifier? {
-    val fqName = treePath.getFqName(javac)
-
-    return javac.findClass(fqName)
-}
+private fun getClassifier(treePath: TreePath, javac: Javac) =  treePath.getFqName(javac).let { javac.findClass(it) }

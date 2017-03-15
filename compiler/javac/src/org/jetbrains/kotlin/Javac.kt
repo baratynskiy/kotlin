@@ -19,7 +19,9 @@ package org.jetbrains.kotlin
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.sun.source.tree.CompilationUnitTree
+import com.sun.source.util.TreePath
 import com.sun.tools.javac.api.JavacTrees
+import com.sun.tools.javac.code.Symbol
 import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.main.JavaCompiler
 import com.sun.tools.javac.file.JavacFileManager
@@ -27,7 +29,6 @@ import com.sun.tools.javac.model.JavacElements
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.util.Context
 import com.sun.tools.javac.util.Names
-import com.sun.tools.javac.util.Options
 import org.jetbrains.kotlin.treeWrappers.JCClass
 import org.jetbrains.kotlin.treeWrappers.JCPackage
 import org.jetbrains.kotlin.elementWrappers.JavacClass
@@ -38,6 +39,7 @@ import org.jetbrains.kotlin.name.isChildOf
 import org.jetbrains.kotlin.name.isSubpackageOf
 import java.io.File
 import javax.lang.model.element.PackageElement
+import javax.lang.model.element.TypeElement
 import javax.tools.JavaFileManager
 import javax.tools.StandardLocation
 import com.sun.tools.javac.util.List as JavacList
@@ -47,7 +49,6 @@ class Javac(private val javaFiles: Collection<File>,
 
     private val context = Context()
     private val javac by lazy { JavaCompiler(context) }
-    private val options by lazy { Options.instance(context).apply { put("-cp", classPathRoots.joinToString(separator = ";") { it.absolutePath }) } }
 
     private val names by lazy { Names.instance(context) }
     private val symbols by lazy { Symtab.instance(context) }
@@ -59,7 +60,14 @@ class Javac(private val javaFiles: Collection<File>,
 
         val fileManager = context[JavaFileManager::class.java] as? JavacFileManager
                           ?: return@lazy emptyList<JCTree.JCCompilationUnit>()
-        fileManager.setLocation(StandardLocation.CLASS_PATH, classPathRoots)
+
+        val classPath = fileManager.getLocation(StandardLocation.PLATFORM_CLASS_PATH).toMutableList()
+        val platformNames = classPath.map { it.name }
+
+        classPathRoots.filter { it.name !in platformNames }
+                .let { classPath.addAll(it) }
+
+        fileManager.setLocation(StandardLocation.CLASS_PATH, classPath)
 
         val fileObjects = fileManager.getJavaFileObjectsFromFiles(javaFiles).toList().toJavacList()
 
@@ -85,11 +93,20 @@ class Javac(private val javaFiles: Collection<File>,
             .filter { (k, _) -> k.toString().startsWith(pack.qualifiedName.toString()) }
             .map { it.value }
 
-    fun findSubPackages(pack: JavaPackage) = javaPackages.filter { it.fqName.isSubpackageOf(pack.fqName) }
+    fun findSubPackages(pack: JavaPackage) = javaPackages.filter { it.fqName.isSubpackageOf(pack.fqName) && it.fqName != pack.fqName }
 
-    fun findPackageClasses(pack: JavaPackage) = javaClasses.filter { it.fqName!!.isChildOf(pack.fqName) }
+    fun findPackageClasses(pack: JavaPackage): List<JavaClass> = javaClasses.filter { it.fqName!!.isChildOf(pack.fqName) }
+            .toMutableList()
+            .apply {
+                getAllClassesInPackage(pack.fqName.asString())?.let { addAll(it) }
+            }
 
-    fun getTreePath(tree: JCTree, compilationUnit: CompilationUnitTree) = trees.getPath(compilationUnit, tree)
+    fun getAllClassesInPackage(packFqName: String) = elements.getPackageElement(packFqName)
+            ?.enclosedElements
+            ?.filterIsInstance(Symbol.ClassSymbol::class.java)
+            ?.map { JavacClass(it, this) }
+
+    fun getTreePath(tree: JCTree, compilationUnit: CompilationUnitTree): TreePath = trees.getPath(compilationUnit, tree)
 
     fun findClass(fqName: String) = javaClasses
                    .filter { fqName.startsWith(it.fqName!!.asString()) }

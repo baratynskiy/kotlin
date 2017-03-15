@@ -47,7 +47,7 @@ class JavacClass<T : TypeElement>(element: T,
 
     override val fqName = FqName(element.qualifiedName.toString())
 
-    override val supertypes: Collection<JavaClassifierType>
+    override val supertypes
         get() = element.interfaces.toMutableList().apply {
             if (element.superclass !is NoType) add(element.superclass)
 
@@ -59,7 +59,7 @@ class JavacClass<T : TypeElement>(element: T,
             }
         }.map { JavacClassifierType(it, javac) }
 
-    override val innerClasses: Collection<JavaClass>
+    override val innerClasses
         get() = element.enclosedElements
                 .filter { it.asType().kind == TypeKind.DECLARED }
                 .filterIsInstance(TypeElement::class.java)

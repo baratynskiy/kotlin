@@ -84,7 +84,7 @@ fun TreePath.getFqName(javac: Javac): String {
             }
 
     javac.findClasses(simpleName)
-            //.filter { it.fullname.toString().startsWith("java.lang.") }
+            .filter { it.fullname.toString().startsWith("java.lang.") }
             .firstOrNull()
             ?.let { return it.fullname.toString() }
 

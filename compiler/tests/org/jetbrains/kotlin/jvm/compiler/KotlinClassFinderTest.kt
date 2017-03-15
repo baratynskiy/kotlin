@@ -16,13 +16,14 @@
 
 package org.jetbrains.kotlin.jvm.compiler
 
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.search.GlobalSearchScope
-import org.jetbrains.kotlin.asJava.classes.KtLightClass
+import org.jetbrains.kotlin.Javac
+import org.jetbrains.kotlin.JavacClassFinder
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.kotlin.JvmVirtualFileFinder
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.lazy.JvmResolveUtil
 import org.jetbrains.kotlin.test.ConfigurationKind
 import org.jetbrains.kotlin.test.KotlinTestUtils
@@ -31,7 +32,6 @@ import org.jetbrains.kotlin.test.TestJdkKind
 import java.io.File
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class KotlinClassFinderTest : KotlinTestWithEnvironmentManagement() {
     fun testAbsentClass() {
@@ -40,9 +40,18 @@ class KotlinClassFinderTest : KotlinTestWithEnvironmentManagement() {
         val environment = createEnvironment(tmpdir)
         val project = environment.project
 
+        val classFinder = JavacClassFinder().apply {
+            setProject(project)
+            setScope(GlobalSearchScope.allScope(project))
+            val javacField = this::class.java.getDeclaredField("javac")
+            javacField.isAccessible = true
+            javacField.set(this, Javac.getInstance(project))
+        }
+
         val className = "test.A.B.D"
-        val psiClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.allScope(project))
-        assertNull(psiClass, "Class is expected to be null, there should be no exceptions too.")
+
+        val found = classFinder.findClass(ClassId.topLevel(FqName(className)))
+        assertNull(found, "Class is expected to be null, there should be no exceptions too.")
     }
 
     fun testNestedClass() {
@@ -54,23 +63,31 @@ class KotlinClassFinderTest : KotlinTestWithEnvironmentManagement() {
         val environment = createEnvironment(tmpdir)
         val project = environment.project
 
-        val className = "test.A.B.C"
-        val psiClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.allScope(project))
-        assertNotNull(psiClass, "Psi class not found for $className")
-        assertTrue(psiClass !is KtLightClass, "Kotlin light classes are not not expected")
+        val classFinder = JavacClassFinder().apply {
+            setProject(project)
+            setScope(GlobalSearchScope.allScope(project))
+            val javacField = this::class.java.getDeclaredField("javac")
+            javacField.isAccessible = true
+            javacField.set(this, Javac.getInstance(project))
+        }
 
-        val binaryClass = JvmVirtualFileFinder.SERVICE.getInstance(project).findKotlinClass(JavaClassImpl(psiClass!!))
+        val className = "test.A.B.C"
+        val found = classFinder.findClass(ClassId.topLevel(FqName(className)))
+        assertNotNull(found, "Class not found for $className")
+
+        val binaryClass = JvmVirtualFileFinder.SERVICE.getInstance(project).findKotlinClass(found!!)
         assertNotNull(binaryClass, "No binary class for $className")
 
         assertEquals("test/A.B.C", binaryClass?.classId?.toString())
     }
 
-    private fun createEnvironment(tmpdir: File?): KotlinCoreEnvironment {
+    private fun createEnvironment(tmpdir: File?, files: List<File> = emptyList()): KotlinCoreEnvironment {
         return KotlinCoreEnvironment.createForTests(
                 testRootDisposable,
                 KotlinTestUtils.newConfiguration(ConfigurationKind.ALL, TestJdkKind.MOCK_JDK, tmpdir),
                 EnvironmentConfigFiles.JVM_CONFIG_FILES
         ).apply {
+            registerJavacForTest(files)
             // Activate Kotlin light class finder
             JvmResolveUtil.analyze(this)
         }

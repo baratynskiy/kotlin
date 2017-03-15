@@ -843,7 +843,8 @@ public class KotlinTestUtils {
                 builder.append(diagnostic).append("\n");
             }
             else {
-                builder.append(diagnostic.getSource().getName()).append(":")
+                File file = new File(diagnostic.getSource().toUri());
+                builder.append(file.getName()).append(":")
                         .append(diagnostic.getLineNumber()).append(":")
                         .append(diagnostic.getColumnNumber()).append(":")
                         .append(diagnostic.getCode()).append("\n");

@@ -30,8 +30,7 @@ class JCPackage(val name: String, val javac: Javac) : JavaPackage {
         get() = javac.findSubPackages(this)
 
     override fun getClasses(nameFilter: (Name) -> Boolean) = javac.findPackageClasses(this)
-            .filter { Name.isValidIdentifier(it.fqName!!.shortName().asString()) && nameFilter(Name.identifier(it.fqName!!.shortName().asString()))
-    }
+            .filter { Name.isValidIdentifier(it.fqName!!.shortName().asString()) && nameFilter(Name.identifier(it.fqName!!.shortName().asString())) }
 
     override fun equals(other: Any?): Boolean {
         if (other !is JCPackage) return false
