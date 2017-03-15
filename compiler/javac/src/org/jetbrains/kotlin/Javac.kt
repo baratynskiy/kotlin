@@ -21,7 +21,6 @@ import com.intellij.openapi.project.Project
 import com.sun.source.tree.CompilationUnitTree
 import com.sun.source.util.TreePath
 import com.sun.tools.javac.api.JavacTrees
-import com.sun.tools.javac.code.Symbol
 import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.file.JavacFileManager
 import com.sun.tools.javac.main.JavaCompiler
@@ -44,7 +43,8 @@ import javax.tools.JavaFileManager
 import javax.tools.StandardLocation
 
 class Javac(private val javaFiles: Collection<File>,
-            private val classPathRoots: List<File>) {
+            private val classPathRoots: List<File>,
+            private val outDir: File?) {
 
     companion object {
         fun getInstance(project: Project): Javac {
@@ -61,30 +61,29 @@ class Javac(private val javaFiles: Collection<File>,
 
     private val compilationUnits by lazy {
         JavacFileManager.preRegister(context)
-
         val fileManager = context[JavaFileManager::class.java] as? JavacFileManager
                           ?: return@lazy emptyList<JCTree.JCCompilationUnit>()
 
-        val classPath = fileManager.getLocation(StandardLocation.PLATFORM_CLASS_PATH).toMutableList()
-        val platformNames = classPath.map { it.name }
-
-        classPathRoots.filter { it.name !in platformNames }
-                .let { classPath.addAll(it) }
+        val classPath = fileManager.getLocation(StandardLocation.PLATFORM_CLASS_PATH)
+                .toMutableList()
+                .apply {
+                    classPathRoots.filter { it.name !in map { it.name } }
+                            .let { addAll(it) }
+                }
 
         fileManager.setLocation(StandardLocation.CLASS_PATH, classPath)
-
         val fileObjects = fileManager.getJavaFileObjectsFromFiles(javaFiles).toList().toJavacList()
 
         javac.parseFiles(fileObjects)
     }
 
-    private val javaClasses: ArrayList<JavaClass> by lazy {
+    private val javaClasses by lazy {
         compilationUnits.flatMap { it.typeDecls.map { type -> Pair(it, type) } }
                 .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
                 .mapTo(arrayListOf<JavaClass>()) { it }
     }
 
-    private val javaPackages: ArrayList<JavaPackage> by lazy {
+    private val javaPackages by lazy {
         compilationUnits.map { JCPackage(it.packageName.toString(), this) }
                 .mapTo(arrayListOf<JavaPackage>()) { it }
     }
@@ -96,8 +95,7 @@ class Javac(private val javaFiles: Collection<File>,
 
     fun findSubPackages(fqName: FqName) = symbols.packages
             .filter { (k, _) ->
-                k.toString().startsWith(fqName.asString())
-                && k.toString() != fqName.asString()
+                k.toString().startsWith(fqName.asString()) && k.toString() != fqName.asString()
             }
             .map { JavacPackage(it.value, this) }
             .toMutableList<JavaPackage>()
@@ -123,6 +121,14 @@ class Javac(private val javaFiles: Collection<File>,
     private inline fun <reified T> List<T>.toJavacList() = JavacList.from(toTypedArray())
 
     private fun findClassInSymbols(fqName: String) = elements.getTypeElement(fqName)
+            ?.takeIf {
+                // take if it is not a Kotlin binary class from an output directory
+                if (outDir == null)
+                    true
+                else
+                    !(it.sourcefile?.name?.endsWith(".kt") ?: false
+                      && it.classfile?.toUri()?.path?.startsWith(outDir.toURI().path) ?: false)
+            }
             ?.let { JavacClass(it, this) }
             ?.also { javaClasses.add(it) }
 
