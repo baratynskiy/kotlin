@@ -39,7 +39,7 @@ open class JavacAnnotationArgument(fqName: FqName,
             is Collection<*> -> arrayAnnotationArguments(value, name, javac)
             is AnnotationValue -> create(value.value, name, javac)
             is TypeMirror -> JavacLiteralAnnotationArgument(value.toString(), name, javac)
-            else -> JavacLiteralAnnotationArgument(value.javaClass.toString(), name, javac)
+            else -> JavacLiteralAnnotationArgument(value, name, javac)
         }
 
         private fun arrayAnnotationArguments(values: Collection<*>, name: Name, javac: Javac): JavaArrayAnnotationArgument = values
