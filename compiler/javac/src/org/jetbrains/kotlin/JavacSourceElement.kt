@@ -16,11 +16,11 @@
 
 package org.jetbrains.kotlin
 
-import org.jetbrains.kotlin.load.java.sources.JavaSourceElementFactory
+import org.jetbrains.kotlin.descriptors.SourceFile
+import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
 import org.jetbrains.kotlin.load.java.structure.JavaElement
 
-class MockJavaSourceElementFactory : JavaSourceElementFactory {
+class JavacSourceElement(override val javaElement: JavaElement) : JavaSourceElement {
 
-    override fun source(javaElement: JavaElement) = MockJavaSourceElement(javaElement)
-
+    override fun getContainingFile(): SourceFile = SourceFile.NO_SOURCE_FILE
 }

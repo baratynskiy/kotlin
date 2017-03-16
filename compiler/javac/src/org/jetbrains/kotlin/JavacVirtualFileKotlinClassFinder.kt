@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClassFinder
 import org.jetbrains.kotlin.treeWrappers.computeClassId
 
 
-abstract class JCVirtualFileKotlinClassFinder : VirtualFileKotlinClassFinder() {
+abstract class JavacVirtualFileKotlinClassFinder : VirtualFileKotlinClassFinder() {
 
     override fun findKotlinClass(javaClass: JavaClass): KotlinJvmBinaryClass? {
         var file = javaClass.computeClassId()?.let { findVirtualFileWithHeader(it) } ?: return null

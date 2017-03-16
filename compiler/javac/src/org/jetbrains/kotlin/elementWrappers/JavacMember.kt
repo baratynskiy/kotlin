@@ -57,7 +57,7 @@ abstract class JavacMember<out T : Element>(element: T,
 }
 
 fun ExecutableElement.valueParameters(javac: Javac) = let {
-    val parameterTypesCount = this.parameters.size
+    val parameterTypesCount = parameters.size
 
     parameters.mapIndexed { index, it ->
         val isLastParameter = index == parameterTypesCount - 1

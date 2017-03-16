@@ -19,9 +19,9 @@ package org.jetbrains.kotlin.frontend.java.di
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.JavacClassFinder
-import org.jetbrains.kotlin.MockJavaPropertyInitializerEvaluator
-import org.jetbrains.kotlin.MockJavaResolverCache
-import org.jetbrains.kotlin.MockJavaSourceElementFactory
+import org.jetbrains.kotlin.JavacJavaPropertyInitializerEvaluator
+import org.jetbrains.kotlin.JavacJavaResolverCache
+import org.jetbrains.kotlin.JavacSourceElementFactory
 import org.jetbrains.kotlin.builtins.JvmBuiltInsPackageFragmentProvider
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.LanguageFeature
@@ -68,19 +68,15 @@ fun StorageComponentContainer.configureJavaTopDownAnalysis(
 
     useImpl<FileScopeProviderImpl>()
 
-//   useImpl<JavaClassFinderImpl>()
     useImpl<JavacClassFinder>()
     useImpl<SignaturePropagatorImpl>()
-    useImpl<MockJavaResolverCache>()
-//    useImpl<LazyResolveBasedCache>()
+    useImpl<JavacJavaResolverCache>()
     useImpl<TraceBasedErrorReporter>()
     useImpl<PsiBasedExternalAnnotationResolver>()
-    useImpl<MockJavaPropertyInitializerEvaluator>()
-//    useImpl<JavaPropertyInitializerEvaluatorImpl>()
+    useImpl<JavacJavaPropertyInitializerEvaluator>()
     useInstance(SamWithReceiverResolver())
     useImpl<SamConversionResolverImpl>()
-    useImpl<MockJavaSourceElementFactory>()
-//    useImpl<JavaSourceElementFactoryImpl>()
+    useImpl<JavacSourceElementFactory>()
     useInstance(InternalFlexibleTypeTransformer)
 
     useInstance(languageVersionSettings)
@@ -106,17 +102,13 @@ fun StorageComponentContainer.configureJavaTopDownAnalysis(
 //    useImpl<FileScopeProviderImpl>()
 //
 //    useImpl<JavaClassFinderImpl>()
-////    useImpl<JavacClassFinder>()
 //    useImpl<SignaturePropagatorImpl>()
-////    useImpl<MockJavaResolverCache>()
 //    useImpl<LazyResolveBasedCache>()
 //    useImpl<TraceBasedErrorReporter>()
 //    useImpl<PsiBasedExternalAnnotationResolver>()
-////    useImpl<MockJavaPropertyInitializerEvaluator>()
 //    useImpl<JavaPropertyInitializerEvaluatorImpl>()
 //    useInstance(SamWithReceiverResolver())
 //    useImpl<SamConversionResolverImpl>()
-////    useImpl<MockJavaSourceElementFactory>()
 //    useImpl<JavaSourceElementFactoryImpl>()
 //    useInstance(InternalFlexibleTypeTransformer)
 //

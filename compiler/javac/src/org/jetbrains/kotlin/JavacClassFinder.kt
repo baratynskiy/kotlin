@@ -17,8 +17,13 @@
 package org.jetbrains.kotlin
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.search.DelegatingGlobalSearchScope
 import com.intellij.psi.search.GlobalSearchScope
+import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.load.java.JavaClassFinder
+import org.jetbrains.kotlin.load.java.structure.JavaClass
+import org.jetbrains.kotlin.load.java.structure.JavaPackage
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.BindingTrace
@@ -31,6 +36,7 @@ class JavacClassFinder : JavaClassFinder {
 
     private lateinit var project: Project
     private lateinit var baseScope: GlobalSearchScope
+    private lateinit var javaSearchScope: GlobalSearchScope
     private lateinit var javac: Javac
 
     @Inject
@@ -43,9 +49,28 @@ class JavacClassFinder : JavaClassFinder {
         baseScope = scope
     }
 
-    override fun findClass(classId: ClassId) = javac.findClass(classId.asSingleFqName())
+    inner class FilterOutKotlinSourceFilesScope(baseScope: GlobalSearchScope) : DelegatingGlobalSearchScope(baseScope) {
 
-    override fun findPackage(fqName: FqName) = javac.findPackage(fqName)
+        override fun contains(file: VirtualFile) = myBaseScope.contains(file) && (file.isDirectory || file.fileType !== KotlinFileType.INSTANCE)
+
+        val base: GlobalSearchScope = myBaseScope
+
+        //NOTE: expected by class finder to be not null
+        override fun getProject() = this@JavacClassFinder.project
+
+        override fun toString() = "$myBaseScope"
+    }
+
+    @PostConstruct
+    fun initialize(trace: BindingTrace, codeAnalyzer: KotlinCodeAnalyzer) {
+        javaSearchScope = FilterOutKotlinSourceFilesScope(baseScope)
+        javac = Javac.getInstance(project)
+        CodeAnalyzerInitializer.getInstance(project).initialize(trace, codeAnalyzer.moduleDescriptor, codeAnalyzer)
+    }
+
+    override fun findClass(classId: ClassId) = javac.findClass(classId.asSingleFqName(), javaSearchScope)
+
+    override fun findPackage(fqName: FqName) = javac.findPackage(fqName, javaSearchScope)
 
     override fun knownClassNamesInPackage(packageFqName: FqName) = javac.findClassesFromPackage(packageFqName)
             .mapNotNull {
@@ -57,10 +82,5 @@ class JavacClassFinder : JavaClassFinder {
             }
             .toSet()
 
-    @PostConstruct
-    fun initialize(trace: BindingTrace, codeAnalyzer: KotlinCodeAnalyzer) {
-        CodeAnalyzerInitializer.getInstance(project).initialize(trace, codeAnalyzer.moduleDescriptor, codeAnalyzer)
-        javac = Javac.getInstance(project)
-    }
 
 }
