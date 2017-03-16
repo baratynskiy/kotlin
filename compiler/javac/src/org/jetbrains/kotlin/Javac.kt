@@ -26,8 +26,10 @@ import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.file.JavacFileManager
 import com.sun.tools.javac.main.JavaCompiler
 import com.sun.tools.javac.model.JavacElements
+import com.sun.tools.javac.tree.EndPosTable
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.util.Context
+import com.sun.tools.javac.util.Log
 import com.sun.tools.javac.util.List as JavacList
 import org.jetbrains.kotlin.elementWrappers.JavacClass
 import org.jetbrains.kotlin.elementWrappers.JavacPackage
@@ -38,33 +40,48 @@ import org.jetbrains.kotlin.name.isChildOf
 import org.jetbrains.kotlin.name.isSubpackageOf
 import org.jetbrains.kotlin.treeWrappers.JCClass
 import org.jetbrains.kotlin.treeWrappers.JCPackage
+import java.io.Closeable
 import java.io.File
 import javax.lang.model.element.TypeElement
 import javax.tools.JavaFileManager
+import javax.tools.JavaFileObject
 import javax.tools.StandardLocation
 
 class Javac(private val javaFiles: Collection<File>,
-            private val classPathRoots: List<File>,
-            private val outDir: File?) {
+            classPathRoots: List<File>,
+            outDir: File?) : Closeable {
 
     companion object {
         fun getInstance(project: Project): Javac = ServiceManager.getService(project, Javac::class.java)
     }
 
-    private val context = Context()
+    private val context = Context().apply {
+        put(Log.logKey, object : Log(this) {
+            override fun setEndPosTable(name: JavaFileObject?, table: EndPosTable?) {
+                val source = getSource(name)
+                if (source.endPosTable == null) {
+                    source.endPosTable = table
+                }
+            }
+        })
+    }
     private val javac = JavaCompiler(context)
+    private val fileManager = context[JavaFileManager::class.java] as JavacFileManager
+
+    init {
+        javac.genEndPos = false
+        fileManager.setLocation(StandardLocation.CLASS_PATH, classPathRoots)
+        outDir?.let {
+            it.mkdirs()
+            fileManager.setLocation(StandardLocation.CLASS_OUTPUT, listOf(it))
+        }
+    }
 
     private val symbols by lazy { Symtab.instance(context) }
     private val trees by lazy { JavacTrees.instance(context) }
     private val elements by lazy { JavacElements.instance(context) }
-
-    private val compilationUnits by lazy {
-        val fileManager = context[JavaFileManager::class.java] as? JavacFileManager ?: return@lazy emptyList<JCTree.JCCompilationUnit>()
-        fileManager.setLocation(StandardLocation.CLASS_PATH, classPathRoots)
-
-        val fileObjects = fileManager.getJavaFileObjectsFromFiles(javaFiles).toList().toJavacList()
-        javac.parseFiles(fileObjects)
-    }
+    private val fileObjects by lazy { fileManager.getJavaFileObjectsFromFiles(javaFiles).toList().toJavacList() }
+    private val compilationUnits by lazy { javac.parseFiles(fileObjects) }
 
     private val javaClasses by lazy {
         compilationUnits.flatMap { it.typeDecls.map { type -> Pair(it, type) } }
@@ -77,16 +94,23 @@ class Javac(private val javaFiles: Collection<File>,
                 .mapTo(arrayListOf<JavaPackage>()) { it }
     }
 
+    fun compile() = javac.compile(fileObjects)
+
+    override fun close() {
+        fileManager.close()
+        javac.close()
+    }
+
     fun findClass(fqName: FqName, scope: GlobalSearchScope? = null) = if (scope == null) findClass(fqName)
-        else if ("$scope".startsWith("NOT:"))
-            findClassInSymbols(fqName.asString())
-        else
-            javaClasses.find { it.fqName == fqName }
+    else if ("$scope".startsWith("NOT:"))
+        findClassInSymbols(fqName.asString())
+    else
+        javaClasses.find { it.fqName == fqName }
 
     fun findPackage(fqName: FqName, scope: GlobalSearchScope) = if ("$scope".startsWith("NOT:"))
-            findPackageInSymbols(fqName.asString())
-        else
-            javaPackages.find { it.fqName == fqName }
+        findPackageInSymbols(fqName.asString())
+    else
+        javaPackages.find { it.fqName == fqName }
 
     fun findSubPackages(fqName: FqName) = symbols.packages
             .filter { (k, _) ->
@@ -117,18 +141,8 @@ class Javac(private val javaFiles: Collection<File>,
 
     private fun findClass(fqName: FqName) = javaClasses.find { it.fqName == fqName } ?: findClassInSymbols(fqName.asString())
 
-    private fun findClassInSymbols(fqName: String) = elements.getTypeElement(fqName)
-            ?.takeIf {
-                // take if it is not a Kotlin binary class from an output directory
-                if (outDir == null)
-                    true
-                else
-                    !(it.sourcefile?.name?.endsWith(".kt") ?: false
-                      && it.classfile?.toUri()?.path?.startsWith(outDir.toURI().path) ?: false)
-            }
-            ?.let { JavacClass(it, this) }
+    private fun findClassInSymbols(fqName: String) = elements.getTypeElement(fqName)?.let { JavacClass(it, this) }
 
     private fun findPackageInSymbols(fqName: String) = elements.getPackageElement(fqName)
             ?.let { JavacPackage(it, this) }
-
 }
