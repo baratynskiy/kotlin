@@ -69,7 +69,6 @@ class Javac(private val javaFiles: Collection<File>,
     private val fileManager = context[JavaFileManager::class.java] as JavacFileManager
 
     init {
-        javac.genEndPos = false
         fileManager.setLocation(StandardLocation.CLASS_PATH, classPathRoots)
         outDir?.let {
             it.mkdirs()
@@ -94,23 +93,39 @@ class Javac(private val javaFiles: Collection<File>,
                 .mapTo(arrayListOf<JavaPackage>()) { it }
     }
 
-    fun compile() = javac.compile(fileObjects)
+    fun compile() {
+        val cp = fileManager.getLocation(StandardLocation.CLASS_PATH) + fileManager.getLocation(StandardLocation.CLASS_OUTPUT)
+        fileManager.setLocation(StandardLocation.CLASS_PATH, cp)
+
+        val newContext = Context()
+        newContext.put(JavaFileManager::class.java, fileManager)
+
+        val newFileManager = newContext[JavaFileManager::class.java] as JavacFileManager
+
+        newFileManager.setLocation(StandardLocation.CLASS_PATH, cp)
+        newFileManager.setLocation(StandardLocation.CLASS_OUTPUT, fileManager.getLocation(StandardLocation.CLASS_OUTPUT))
+
+        JavaCompiler(newContext).compile(fileObjects)
+    }
 
     override fun close() {
         fileManager.close()
         javac.close()
     }
 
-    fun findClass(fqName: FqName, scope: GlobalSearchScope? = null) = if (scope == null) findClass(fqName)
-    else if ("$scope".startsWith("NOT:"))
-        findClassInSymbols(fqName.asString())
-    else
-        javaClasses.find { it.fqName == fqName }
+    fun findClass(fqName: FqName, scope: GlobalSearchScope? = null) = scope?.let {
+        if ("$it".startsWith("NOT:"))
+            findClassInSymbols(fqName.asString())
+        else
+            javaClasses.find { it.fqName == fqName }
+    } ?: findClass(fqName)
 
-    fun findPackage(fqName: FqName, scope: GlobalSearchScope) = if ("$scope".startsWith("NOT:"))
-        findPackageInSymbols(fqName.asString())
-    else
-        javaPackages.find { it.fqName == fqName }
+    fun findPackage(fqName: FqName, scope: GlobalSearchScope) = scope.let {
+        if ("$it".startsWith("NOT:"))
+            findPackageInSymbols(fqName.asString())
+        else
+            javaPackages.find { it.fqName == fqName }
+    }
 
     fun findSubPackages(fqName: FqName) = symbols.packages
             .filter { (k, _) ->
