@@ -47,9 +47,7 @@ class Javac(private val javaFiles: Collection<File>,
             private val outDir: File?) {
 
     companion object {
-        fun getInstance(project: Project): Javac {
-            return ServiceManager.getService(project, Javac::class.java)
-        }
+        fun getInstance(project: Project): Javac = ServiceManager.getService(project, Javac::class.java)
     }
 
     private val context = Context()
@@ -63,15 +61,8 @@ class Javac(private val javaFiles: Collection<File>,
         JavacFileManager.preRegister(context)
         val fileManager = context[JavaFileManager::class.java] as? JavacFileManager
                           ?: return@lazy emptyList<JCTree.JCCompilationUnit>()
+        fileManager.setLocation(StandardLocation.CLASS_PATH, classPathRoots)
 
-        val classPath = fileManager.getLocation(StandardLocation.PLATFORM_CLASS_PATH)
-                .toMutableList()
-                .apply {
-                    classPathRoots.filter { it.name !in map { it.name } }
-                            .let { addAll(it) }
-                }
-
-        fileManager.setLocation(StandardLocation.CLASS_PATH, classPath)
         val fileObjects = fileManager.getJavaFileObjectsFromFiles(javaFiles).toList().toJavacList()
 
         javac.parseFiles(fileObjects)
