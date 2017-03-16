@@ -48,11 +48,14 @@ abstract class JavacMember<out T : Element>(element: T,
 
     override val isDeprecatedInJavaDoc = false
 
-    override val isAbstract = element.isAbstract
+    override val isAbstract
+        get() = element.isAbstract
 
-    override val isStatic = element.isStatic
+    override val isStatic
+        get() = element.isStatic
 
-    override val isFinal = element.isFinal
+    override val isFinal
+        get() = element.isFinal
 
 }
 

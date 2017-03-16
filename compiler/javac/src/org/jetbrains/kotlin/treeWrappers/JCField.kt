@@ -28,17 +28,23 @@ class JCField<out T : JCTree.JCVariableDecl>(tree: T,
                                              treePath: TreePath,
                                              javac: Javac) : JCMember<T>(tree, treePath, javac), JavaField {
 
-    override val name = Name.identifier(tree.name.toString())
+    override val name
+        get() = Name.identifier(tree.name.toString())
 
-    override val isAbstract = tree.modifiers.isAbstract
+    override val isAbstract
+        get() = tree.modifiers.isAbstract
 
-    override val isStatic = tree.modifiers.isStatic
+    override val isStatic
+        get() = tree.modifiers.isStatic
 
-    override val isFinal = tree.modifiers.isFinal
+    override val isFinal
+        get() = tree.modifiers.isFinal
 
-    override val visibility = tree.modifiers.visibility
+    override val visibility
+        get() = tree.modifiers.visibility
 
-    override val isEnumEntry = tree.modifiers.flags and Flags.ENUM.toLong() != 0L
+    override val isEnumEntry
+        get() = tree.modifiers.flags and Flags.ENUM.toLong() != 0L
 
     override val type: JavaType
         get() = JCType.create(tree.getType(), treePath, javac)

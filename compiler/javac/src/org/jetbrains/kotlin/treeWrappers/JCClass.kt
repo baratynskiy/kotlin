@@ -32,20 +32,25 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                                           treePath: TreePath,
                                           javac: Javac) : JCClassifier<T>(tree, treePath, javac), JavaClass {
 
-    override val name = SpecialNames.safeIdentifier(tree.simpleName.toString())
+    override val name
+        get() = SpecialNames.safeIdentifier(tree.simpleName.toString())
 
     override val annotations: Collection<JavaAnnotation>
         get() = treePath.annotations.map { JCAnnotation(it, TreePath.getPath(treePath.compilationUnit, it), javac) }
 
     override fun findAnnotation(fqName: FqName) = annotations.firstOrNull { it.classId?.asSingleFqName() == fqName }
 
-    override val isAbstract = tree.modifiers.isAbstract
+    override val isAbstract
+        get() = tree.modifiers.isAbstract
 
-    override val isStatic = tree.modifiers.isStatic
+    override val isStatic
+        get() = tree.modifiers.isStatic
 
-    override val isFinal = tree.modifiers.isFinal
+    override val isFinal
+        get() = tree.modifiers.isFinal
 
-    override val visibility = tree.modifiers.visibility
+    override val visibility
+        get() = tree.modifiers.visibility
 
     override val typeParameters
         get() = tree.typeParameters.map { JCTypeParameter(it, TreePath(treePath, it), javac) }
@@ -76,11 +81,14 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val outerClass
         get() = (treePath.parentPath.leaf as? JCTree.JCClassDecl)?.let { JCClass<JCTree.JCClassDecl>(it, treePath.parentPath, javac) }
 
-    override val isInterface = tree.modifiers.flags and Flags.INTERFACE.toLong() != 0L
+    override val isInterface
+        get() = tree.modifiers.flags and Flags.INTERFACE.toLong() != 0L
 
-    override val isAnnotationType = tree.modifiers.flags and Flags.ANNOTATION.toLong() != 0L
+    override val isAnnotationType
+        get() = tree.modifiers.flags and Flags.ANNOTATION.toLong() != 0L
 
-    override val isEnum = tree.modifiers.flags and Flags.ENUM.toLong() != 0L
+    override val isEnum
+        get() = tree.modifiers.flags and Flags.ENUM.toLong() != 0L
 
     override val lightClassOriginKind = null
 

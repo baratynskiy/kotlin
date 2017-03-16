@@ -27,7 +27,7 @@ import javax.lang.model.element.AnnotationValue
 import javax.lang.model.element.VariableElement
 import javax.lang.model.type.TypeMirror
 
-open class JavacAnnotationArgument(fqName: FqName,
+open class JavacAnnotationArgument(private val fqName: FqName,
                                    val javac: Javac) : JavaAnnotationArgument, JavaElement {
 
     companion object {
@@ -46,6 +46,7 @@ open class JavacAnnotationArgument(fqName: FqName,
 
     }
 
-    override val name = Name.identifier(fqName.shortName().asString())
+    override val name
+        get() = Name.identifier(fqName.shortName().asString())
 
 }

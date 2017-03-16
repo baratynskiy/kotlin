@@ -46,8 +46,10 @@ class JavacClassifierType<out T : TypeMirror>(typeMirror: T,
         }
 
 
-    override val canonicalText = typeMirror.toString()
+    override val canonicalText
+        get() = typeMirror.toString()
 
-    override val presentableText = typeMirror.toString()
+    override val presentableText
+        get() = typeMirror.toString()
 
 }

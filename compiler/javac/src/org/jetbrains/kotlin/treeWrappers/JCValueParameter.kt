@@ -37,7 +37,8 @@ class JCValueParameter<out T : JCTree.JCVariableDecl>(tree: T,
 
     override val isDeprecatedInJavaDoc = false
 
-    override val name = Name.identifier(tree.name.toString())
+    override val name
+        get() = Name.identifier(tree.name.toString())
 
     override val type: JavaType
         get() = JCType.create(tree.getType(), treePath, javac)

@@ -24,13 +24,10 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 open class JCAnnotationArgument(val tree: JCTree.JCExpression,
-                                fqName: FqName,
+                                private val fqName: FqName,
                                 val javac: Javac) : JavaAnnotationArgument, JavaElement {
 
-    init {
-        println(tree::class.java)
-    }
-
-    override val name = Name.identifier(fqName.shortName().asString())
+    override val name
+        get() = Name.identifier(fqName.shortName().asString())
 
 }

@@ -32,20 +32,26 @@ import javax.lang.model.type.TypeKind
 class JavacClass<T : TypeElement>(element: T,
                                   javac: Javac) : JavacClassifier<TypeElement>(element, javac), JavaClass {
 
-    override val name = SpecialNames.safeIdentifier(element.simpleName.toString())
+    override val name
+        get() = SpecialNames.safeIdentifier(element.simpleName.toString())
 
-    override val isAbstract = element.isAbstract
+    override val isAbstract
+        get() = element.isAbstract
 
-    override val isStatic = element.isStatic
+    override val isStatic
+        get() = element.isStatic
 
-    override val isFinal = element.isFinal
+    override val isFinal
+        get() = element.isFinal
 
-    override val visibility = element.getVisibility()
+    override val visibility
+        get() = element.getVisibility()
 
     override val typeParameters: List<JavaTypeParameter>
         get() = element.typeParameters.map { JavacTypeParameter(it, javac) }
 
-    override val fqName = FqName(element.qualifiedName.toString())
+    override val fqName
+        get() = FqName(element.qualifiedName.toString())
 
     override val supertypes
         get() = element.interfaces.toMutableList().apply {
@@ -70,11 +76,14 @@ class JavacClass<T : TypeElement>(element: T,
             if (it.asType().kind != TypeKind.DECLARED) null else JavacClass(it as TypeElement, javac)
         }
 
-    override val isInterface = element.kind == ElementKind.INTERFACE
+    override val isInterface
+        get() = element.kind == ElementKind.INTERFACE
 
-    override val isAnnotationType = element.kind == ElementKind.ANNOTATION_TYPE
+    override val isAnnotationType
+        get() = element.kind == ElementKind.ANNOTATION_TYPE
 
-    override val isEnum = element.kind == ElementKind.ENUM
+    override val isEnum
+        get() = element.kind == ElementKind.ENUM
 
     override val lightClassOriginKind = null
 

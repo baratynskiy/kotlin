@@ -26,7 +26,8 @@ import javax.lang.model.type.TypeVariable
 class JavacTypeParameter<out T : TypeParameterElement>(element: T,
                                                        javac: Javac) : JavacClassifier<T>(element, javac), JavaTypeParameter {
 
-    override val name = SpecialNames.safeIdentifier(element.simpleName.toString())
+    override val name
+        get() = SpecialNames.safeIdentifier(element.simpleName.toString())
 
     override val upperBounds: Collection<JavaClassifierType>
         get() = listOf(JavacClassifierType((element.asType() as TypeVariable).upperBound, javac))

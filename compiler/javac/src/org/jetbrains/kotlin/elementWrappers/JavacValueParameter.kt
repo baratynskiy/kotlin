@@ -24,7 +24,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import javax.lang.model.element.VariableElement
 
-class JavacValueParameter<out T : VariableElement>(element: T, name : String,
+class JavacValueParameter<out T : VariableElement>(element: T, private val elementName : String,
                                                    override val isVararg : Boolean,
                                                    javac: Javac) : JavacElement<T>(element, javac), JavaValueParameter {
 
@@ -39,9 +39,10 @@ class JavacValueParameter<out T : VariableElement>(element: T, name : String,
 
     override val isDeprecatedInJavaDoc = false
 
-    override val name = Name.identifier(name)
+    override val name: Name
+        get() = Name.identifier(elementName)
 
-    override val type: JavaType
+    override val type
         get() = JavacType.create(element.asType(), javac)
 
 }
