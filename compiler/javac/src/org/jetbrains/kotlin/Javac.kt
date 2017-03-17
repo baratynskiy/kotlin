@@ -26,10 +26,8 @@ import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.file.JavacFileManager
 import com.sun.tools.javac.main.JavaCompiler
 import com.sun.tools.javac.model.JavacElements
-import com.sun.tools.javac.tree.EndPosTable
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.util.Context
-import com.sun.tools.javac.util.Log
 import com.sun.tools.javac.util.List as JavacList
 import org.jetbrains.kotlin.elementWrappers.JavacClass
 import org.jetbrains.kotlin.elementWrappers.JavacPackage
@@ -44,7 +42,6 @@ import java.io.Closeable
 import java.io.File
 import javax.lang.model.element.TypeElement
 import javax.tools.JavaFileManager
-import javax.tools.JavaFileObject
 import javax.tools.StandardLocation
 
 class Javac(private val javaFiles: Collection<File>,
@@ -55,16 +52,7 @@ class Javac(private val javaFiles: Collection<File>,
         fun getInstance(project: Project): Javac = ServiceManager.getService(project, Javac::class.java)
     }
 
-    private val context = Context().apply {
-        put(Log.logKey, object : Log(this) {
-            override fun setEndPosTable(name: JavaFileObject?, table: EndPosTable?) {
-                val source = getSource(name)
-                if (source.endPosTable == null) {
-                    source.endPosTable = table
-                }
-            }
-        })
-    }
+    private val context = Context()
     private val javac = JavaCompiler(context)
     private val fileManager = context[JavaFileManager::class.java] as JavacFileManager
 
@@ -93,19 +81,17 @@ class Javac(private val javaFiles: Collection<File>,
                 .mapTo(arrayListOf<JavaPackage>()) { it }
     }
 
-    fun compile() {
-        val cp = fileManager.getLocation(StandardLocation.CLASS_PATH) + fileManager.getLocation(StandardLocation.CLASS_OUTPUT)
-        fileManager.setLocation(StandardLocation.CLASS_PATH, cp)
-
-        val newContext = Context()
-        newContext.put(JavaFileManager::class.java, fileManager)
-
-        val newFileManager = newContext[JavaFileManager::class.java] as JavacFileManager
-
-        newFileManager.setLocation(StandardLocation.CLASS_PATH, cp)
-        newFileManager.setLocation(StandardLocation.CLASS_OUTPUT, fileManager.getLocation(StandardLocation.CLASS_OUTPUT))
-
-        JavaCompiler(newContext).compile(fileObjects)
+    fun compile() = fileManager.apply {
+        setLocation(StandardLocation.CLASS_PATH,
+                    getLocation(StandardLocation.CLASS_PATH) + getLocation(StandardLocation.CLASS_OUTPUT))
+    }.let {
+        with(Context()) {
+            put(JavaFileManager::class.java, it)
+            JavaCompiler(this).apply {
+                compile(fileObjects)
+                close()
+            }
+        }
     }
 
     override fun close() {
@@ -135,7 +121,7 @@ class Javac(private val javaFiles: Collection<File>,
             .toMutableList<JavaPackage>()
             .apply {
                 javaPackages.filter { it.fqName.isSubpackageOf(fqName) && it.fqName != fqName }
-                        .let { addAll(it) }
+                        .let(this::addAll)
             }
 
     fun findClassesFromPackage(fqName: FqName) = javaClasses
@@ -147,7 +133,7 @@ class Javac(private val javaFiles: Collection<File>,
                         ?.elements
                         ?.filterIsInstance(TypeElement::class.java)
                         ?.map { JavacClass(it, this) }
-                        ?.let { classes -> it.addAll(classes) }
+                        ?.let(it::addAll)
             }
 
     fun getTreePath(tree: JCTree, compilationUnit: CompilationUnitTree): TreePath = trees.getPath(compilationUnit, tree)
