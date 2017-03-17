@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin
+package org.jetbrains.kotlin.components
 
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.kotlin.KotlinBinaryClassCache
@@ -26,7 +26,7 @@ import org.jetbrains.kotlin.treeWrappers.computeClassId
 abstract class JavacVirtualFileKotlinClassFinder : VirtualFileKotlinClassFinder() {
 
     override fun findKotlinClass(javaClass: JavaClass): KotlinJvmBinaryClass? {
-        var file = javaClass.computeClassId()?.let { findVirtualFileWithHeader(it) } ?: return null
+        var file = javaClass.computeClassId()?.let(this::findVirtualFileWithHeader) ?: return null
 
         if (javaClass.outerClass != null) {
             // For nested classes we get a file of the containing class, to get the actual class file for A.B.C,
