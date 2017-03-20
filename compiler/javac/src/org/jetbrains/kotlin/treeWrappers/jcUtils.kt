@@ -87,7 +87,7 @@ fun TreePath.getFqName(javac: Javac): FqName {
     javac.findClass(FqName("java.lang.$simpleName"))
             ?.let { return it.fqName!! }
 
-    return FqName(simpleName)
+    return FqName("${compilationUnit.packageName}.$simpleName")
 }
 
 fun JavaClass.computeClassId(): ClassId? {

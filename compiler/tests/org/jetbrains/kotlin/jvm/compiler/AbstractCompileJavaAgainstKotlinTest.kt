@@ -53,7 +53,6 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
         val out = File(tmpdir, "out")
         compileKotlinWithJava(listOf(javaFile), listOf(ktFile),
                               out, testRootDisposable, javaErrorFile)
-
         val environment = KotlinCoreEnvironment.createForTests(
                 testRootDisposable,
                 newConfiguration(ConfigurationKind.ALL, TestJdkKind.MOCK_JDK, getAnnotationsJar(), out),

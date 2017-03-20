@@ -19,9 +19,12 @@ package org.jetbrains.kotlin.treeWrappers
 import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.Javac
-import org.jetbrains.kotlin.load.java.structure.JavaClass
-import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
-import org.jetbrains.kotlin.load.java.structure.JavaType
+import org.jetbrains.kotlin.descriptors.Visibilities
+import org.jetbrains.kotlin.descriptors.Visibility
+import org.jetbrains.kotlin.load.java.structure.*
+import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.SpecialNames
 
 abstract class ClassifierType<out T : JCTree>(tree: T,
                                               treePath: TreePath,
@@ -62,9 +65,72 @@ class JCClassifierTypeWithTypeArgument<out T : JCTree.JCTypeApply>(tree: T,
 }
 
 private fun isRaw(treePath: TreePath, javac: Javac): Boolean {
-    val classifier = getClassifier(treePath, javac) as? JavaClass ?: return false
+    val classifier = getClassifier(treePath, javac)
 
     return classifier.typeParameters.isNotEmpty()
 }
 
-private fun getClassifier(treePath: TreePath, javac: Javac) =  treePath.getFqName(javac).let { javac.findClass(it) }
+private fun getClassifier(treePath: TreePath, javac: Javac) = treePath.getFqName(javac).let(javac::findClass)
+                                                              ?: createStubClassifier(treePath, javac)
+
+private fun createStubClassifier(treePath: TreePath, javac: Javac) = object : JavaClass {
+    override val isAbstract: Boolean
+        get() = false
+
+    override val isStatic: Boolean
+        get() = false
+
+    override val isFinal: Boolean
+        get() = false
+
+    override val visibility: Visibility
+        get() = Visibilities.PUBLIC
+
+    override val typeParameters: List<JavaTypeParameter>
+        get() = emptyList()
+
+    override val fqName: FqName?
+        get() = treePath.getFqName(javac)
+
+    override val supertypes: Collection<JavaClassifierType>
+        get() = emptyList()
+
+    override val innerClasses: Collection<JavaClass>
+        get() = emptyList()
+
+    override val outerClass: JavaClass?
+        get() = null
+
+    override val isInterface: Boolean
+        get() = false
+
+    override val isAnnotationType: Boolean
+        get() = false
+
+    override val isEnum: Boolean
+        get() = false
+
+    override val lightClassOriginKind: LightClassOriginKind?
+        get() = LightClassOriginKind.SOURCE
+
+    override val methods: Collection<JavaMethod>
+        get() = emptyList()
+
+    override val fields: Collection<JavaField>
+        get() = emptyList()
+
+    override val constructors: Collection<JavaConstructor>
+        get() = emptyList()
+
+    override val name: Name
+        get() = SpecialNames.safeIdentifier(treePath.leaf.toString())
+
+    override val annotations
+        get() = emptyList<JavaAnnotation>()
+
+    override val isDeprecatedInJavaDoc: Boolean
+        get() = false
+
+    override fun findAnnotation(fqName: FqName) = null
+
+}
