@@ -60,7 +60,7 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
                 EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
 
-        environment.registerJavacForTest(emptyList<File>(), out)
+        environment.registerJavac(emptyList<File>(), out)
 
         val analysisResult = JvmResolveUtil.analyze(environment)
         val packageView = analysisResult.moduleDescriptor.getPackage(LoadDescriptorUtil.TEST_PACKAGE_FQNAME)
@@ -78,7 +78,7 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
             javaErrorFile: File?
     ) {
         val environment = createEnvironmentWithMockJdkAndIdeaAnnotations(disposable)
-        environment.registerJavacForTest(javaFiles, outDir)
+        environment.registerJavac(javaFiles, outDir)
         if (!ktFiles.isEmpty()) {
             LoadDescriptorUtil.compileKotlinToDirAndGetModule(ktFiles, outDir, environment)
         }
@@ -87,12 +87,6 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
             assert(mkdirs) { "Not created: " + outDir }
         }
         org.jetbrains.kotlin.Javac.getInstance(environment.project).use(Javac::compile)
-//        if (!javaFiles.isEmpty()) {
-//            compileJavaFiles(javaFiles, listOf(
-//                    "-classpath", outDir.path + File.pathSeparator + ForTestCompileRuntime.runtimeJarForTests(),
-//                    "-d", outDir.path
-//            ), javaErrorFile)
-//        }
     }
 
     companion object {

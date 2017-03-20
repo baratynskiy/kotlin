@@ -59,9 +59,7 @@ class JavacClass<T : TypeElement>(element: T,
 
             val hasObject = !none { it.toString() == CommonClassNames.JAVA_LANG_OBJECT }
             if (!hasObject && element.toString() != CommonClassNames.JAVA_LANG_OBJECT) {
-                val obj = javac.findClass(FqName(CommonClassNames.JAVA_LANG_OBJECT)) as? JavacClass<*>
-
-                obj?.let { add(it.element.asType()) }
+                javac.JAVA_LANG_OBJECT?.let { add(it.element.asType()) }
             }
         }.map { JavacClassifierType(it, javac) }
 

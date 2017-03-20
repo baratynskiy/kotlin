@@ -69,8 +69,8 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                 else -> null
             }
 
-            tree.extending?.mapToJavaClassifierType()?.let { add(it) }
-            tree.implementing?.map { it.mapToJavaClassifierType() }?.filterNotNull()?.let { addAll(it) }
+            tree.extending?.mapToJavaClassifierType()?.let(this::add)
+            tree.implementing?.map { it.mapToJavaClassifierType() }?.filterNotNull()?.let(this::addAll)
         }
 
     override val innerClasses
@@ -79,7 +79,7 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                 .map { JCClass(it, TreePath(treePath, it), javac) }
 
     override val outerClass
-        get() = (treePath.parentPath.leaf as? JCTree.JCClassDecl)?.let { JCClass<JCTree.JCClassDecl>(it, treePath.parentPath, javac) }
+        get() = (treePath.parentPath.leaf as? JCTree.JCClassDecl)?.let { JCClass(it, treePath.parentPath, javac) }
 
     override val isInterface
         get() = tree.modifiers.flags and Flags.INTERFACE.toLong() != 0L

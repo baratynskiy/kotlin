@@ -18,6 +18,8 @@ package org.jetbrains.kotlin
 
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
+import com.intellij.psi.CommonClassNames
+import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.search.GlobalSearchScope
 import com.sun.source.tree.CompilationUnitTree
 import com.sun.source.util.TreePath
@@ -52,6 +54,8 @@ class Javac(private val javaFiles: Collection<File>,
         fun getInstance(project: Project): Javac = ServiceManager.getService(project, Javac::class.java)
     }
 
+    val JAVA_LANG_OBJECT by lazy { findClassInSymbols(CommonClassNames.JAVA_LANG_OBJECT) }
+
     private val context = Context()
     private val javac = JavaCompiler(context)
     private val fileManager = context[JavaFileManager::class.java] as JavacFileManager
@@ -70,15 +74,13 @@ class Javac(private val javaFiles: Collection<File>,
     private val fileObjects by lazy { fileManager.getJavaFileObjectsFromFiles(javaFiles).toList().toJavacList() }
     private val compilationUnits by lazy { javac.parseFiles(fileObjects) }
 
-    private val javaClasses by lazy {
+    private val javaClasses: List<JavaClass> by lazy {
         compilationUnits.flatMap { it.typeDecls.map { type -> Pair(it, type) } }
                 .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
-                .mapTo(arrayListOf<JavaClass>()) { it }
     }
 
-    private val javaPackages by lazy {
+    private val javaPackages: List<JavaPackage> by lazy {
         compilationUnits.map { JCPackage(it.packageName.toString(), this) }
-                .mapTo(arrayListOf<JavaPackage>()) { it }
     }
 
     fun compile() = fileManager.apply {
@@ -99,18 +101,21 @@ class Javac(private val javaFiles: Collection<File>,
         javac.close()
     }
 
-    fun findClass(fqName: FqName, scope: GlobalSearchScope? = null) = scope?.let {
+    fun findClass(fqName: FqName, scope: GlobalSearchScope) = scope.let {
+        if (it is EverythingGlobalScope) return findClass(fqName)
         if ("$it".startsWith("NOT:"))
             findClassInSymbols(fqName.asString())
         else
             javaClasses.find { it.fqName == fqName }
-    } ?: findClass(fqName)
+    }
 
-    fun findPackage(fqName: FqName, scope: GlobalSearchScope) = scope.let {
+    fun findClass(fqName: FqName) = javaClasses.find { it.fqName == fqName } ?: findClassInSymbols(fqName.asString())
+
+    fun findPackage(fqName: FqName, scope: GlobalSearchScope): JavaPackage? = scope.let {
+        if (it is EverythingGlobalScope) return findPackage(fqName)
         if ("$it".startsWith("NOT:"))
             findPackageInSymbols(fqName.asString())
-        else
-            javaPackages.find { it.fqName == fqName }
+        else javaPackages.find { it.fqName == fqName }
     }
 
     fun findSubPackages(fqName: FqName) = symbols.packages
@@ -140,10 +145,10 @@ class Javac(private val javaFiles: Collection<File>,
 
     private inline fun <reified T> List<T>.toJavacList() = JavacList.from(toTypedArray())
 
-    private fun findClass(fqName: FqName) = javaClasses.find { it.fqName == fqName } ?: findClassInSymbols(fqName.asString())
+    private fun findPackage(fqName: FqName) = javaPackages.find { it.fqName == fqName } ?: findPackageInSymbols(fqName.asString())
 
     private fun findClassInSymbols(fqName: String) = elements.getTypeElement(fqName)?.let { JavacClass(it, this) }
 
-    private fun findPackageInSymbols(fqName: String) = elements.getPackageElement(fqName)
-            ?.let { JavacPackage(it, this) }
+    private fun findPackageInSymbols(fqName: String) = elements.getPackageElement(fqName)?.let { JavacPackage(it, this) }
+
 }

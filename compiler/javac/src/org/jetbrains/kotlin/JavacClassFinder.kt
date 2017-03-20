@@ -22,8 +22,6 @@ import com.intellij.psi.search.DelegatingGlobalSearchScope
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.load.java.JavaClassFinder
-import org.jetbrains.kotlin.load.java.structure.JavaClass
-import org.jetbrains.kotlin.load.java.structure.JavaPackage
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.BindingTrace
@@ -74,13 +72,10 @@ class JavacClassFinder : JavaClassFinder {
 
     override fun knownClassNamesInPackage(packageFqName: FqName) = javac.findClassesFromPackage(packageFqName)
             .mapNotNull {
-                val fqName = it.fqName
-                if (fqName == null)
-                    null
-                else
-                    if (fqName.isRoot) fqName.asString() else fqName.shortName().asString()
+                it.fqName?.let {
+                    if (it.isRoot) it.asString() else it.shortName().asString()
+                }
             }
             .toSet()
-
 
 }

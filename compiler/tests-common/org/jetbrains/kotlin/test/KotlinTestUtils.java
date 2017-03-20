@@ -560,7 +560,7 @@ public class KotlinTestUtils {
     ) throws IOException {
         if (!ktFiles.isEmpty()) {
             KotlinCoreEnvironment environment = createEnvironmentWithMockJdkAndIdeaAnnotations(disposable);
-            environment.registerJavacForTest(javaFiles, outDir);
+            environment.registerJavac(javaFiles, outDir);
             LoadDescriptorUtil.compileKotlinToDirAndGetModule(ktFiles, outDir, environment);
         }
         else {

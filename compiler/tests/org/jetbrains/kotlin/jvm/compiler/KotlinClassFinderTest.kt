@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.jvm.compiler
 
+import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.Javac
 import org.jetbrains.kotlin.JavacClassFinder
@@ -40,13 +41,7 @@ class KotlinClassFinderTest : KotlinTestWithEnvironmentManagement() {
         val environment = createEnvironment(tmpdir)
         val project = environment.project
 
-        val classFinder = JavacClassFinder().apply {
-            setProject(project)
-            setScope(GlobalSearchScope.allScope(project))
-            val javacField = this::class.java.getDeclaredField("javac")
-            javacField.isAccessible = true
-            javacField.set(this, Javac.getInstance(project))
-        }
+        val classFinder = createClassFinder(project)
 
         val className = "test.A.B.D"
 
@@ -63,13 +58,7 @@ class KotlinClassFinderTest : KotlinTestWithEnvironmentManagement() {
         val environment = createEnvironment(tmpdir)
         val project = environment.project
 
-        val classFinder = JavacClassFinder().apply {
-            setProject(project)
-            setScope(GlobalSearchScope.allScope(project))
-            val javacField = this::class.java.getDeclaredField("javac")
-            javacField.isAccessible = true
-            javacField.set(this, Javac.getInstance(project))
-        }
+        val classFinder = createClassFinder(project)
 
         val className = "test.A.B.C"
         val found = classFinder.findClass(ClassId.topLevel(FqName(className)))
@@ -81,13 +70,26 @@ class KotlinClassFinderTest : KotlinTestWithEnvironmentManagement() {
         assertEquals("test/A.B.C", binaryClass?.classId?.toString())
     }
 
+    private fun createClassFinder(project: Project) = JavacClassFinder().apply {
+        setProject(project)
+        setScope(GlobalSearchScope.allScope(project))
+
+        val javacField = this::class.java.getDeclaredField("javac")
+        javacField.isAccessible = true
+        javacField.set(this, Javac.getInstance(project))
+
+        val javaSearchScopeField = this::class.java.getDeclaredField("javaSearchScope")
+        javaSearchScopeField.isAccessible = true
+        javaSearchScopeField.set(this, GlobalSearchScope.allScope(project))
+    }
+
     private fun createEnvironment(tmpdir: File?, files: List<File> = emptyList()): KotlinCoreEnvironment {
         return KotlinCoreEnvironment.createForTests(
                 testRootDisposable,
                 KotlinTestUtils.newConfiguration(ConfigurationKind.ALL, TestJdkKind.MOCK_JDK, tmpdir),
                 EnvironmentConfigFiles.JVM_CONFIG_FILES
         ).apply {
-            registerJavacForTest(files)
+            registerJavac(files)
             // Activate Kotlin light class finder
             JvmResolveUtil.analyze(this)
         }

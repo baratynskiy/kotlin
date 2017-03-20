@@ -101,7 +101,6 @@ import org.jetbrains.kotlin.resolve.lazy.declarations.DeclarationProviderFactory
 import org.jetbrains.kotlin.script.KotlinScriptDefinitionProvider
 import org.jetbrains.kotlin.script.KotlinScriptExternalImportsProvider
 import org.jetbrains.kotlin.utils.PathUtil
-import org.jetbrains.kotlin.utils.addToStdlib.check
 import java.io.File
 import java.lang.IllegalStateException
 import java.util.*
@@ -188,8 +187,6 @@ class KotlinCoreEnvironment private constructor(
         for (registrar in configuration.getList(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS)) {
             registrar.registerProjectComponents(project, configuration)
         }
-
-//        project.registerService(Javac::class.java, Javac(javaFiles))
     }
 
     //temporary------------------------------
@@ -204,12 +201,11 @@ class KotlinCoreEnvironment private constructor(
 
     private val javaFiles
         get() = configuration.kotlinSourceRoots
-                .mapNotNull { findLocalDirectory(it) }
+                .mapNotNull(this::findLocalDirectory)
                 .flatMap { it.javaFiles }
                 .map { File(it.canonicalPath) }
 
-    @TestOnly
-    fun registerJavacForTest(files: List<File>, outDir: File? = null) {
+    fun registerJavac(files: List<File> = javaFiles, outDir: File? = null) {
         projectEnvironment.project.registerService(Javac::class.java, Javac(files, configuration.jvmClasspathRoots, outDir))
     }
     //---------------------------------------
@@ -442,7 +438,7 @@ class KotlinCoreEnvironment private constructor(
 
         private fun registerApplicationExtensionPointsAndExtensionsFrom(configuration: CompilerConfiguration, configFilePath: String) {
             val locator = configuration.get(CLIConfigurationKeys.COMPILER_JAR_LOCATOR)
-            var pluginRoot = if (locator == null) PathUtil.getPathUtilJar() else locator.compilerJar
+            var pluginRoot = locator?.compilerJar ?: PathUtil.getPathUtilJar()
 
             val app = ApplicationManager.getApplication()
             val parentFile = pluginRoot.parentFile
