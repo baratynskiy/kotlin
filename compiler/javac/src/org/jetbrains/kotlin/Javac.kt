@@ -24,12 +24,16 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.sun.source.tree.CompilationUnitTree
 import com.sun.source.util.TreePath
 import com.sun.tools.javac.api.JavacTrees
+import com.sun.tools.javac.code.Flags
+import com.sun.tools.javac.code.Symbol
 import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.file.JavacFileManager
+import com.sun.tools.javac.jvm.ClassReader
 import com.sun.tools.javac.main.JavaCompiler
 import com.sun.tools.javac.model.JavacElements
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.util.Context
+import com.sun.tools.javac.util.Names
 import com.sun.tools.javac.util.List as JavacList
 import org.jetbrains.kotlin.elementWrappers.JavacClass
 import org.jetbrains.kotlin.elementWrappers.JavacPackage
@@ -44,6 +48,7 @@ import java.io.Closeable
 import java.io.File
 import javax.lang.model.element.TypeElement
 import javax.tools.JavaFileManager
+import javax.tools.JavaFileObject
 import javax.tools.StandardLocation
 
 class Javac(private val javaFiles: Collection<File>,
@@ -57,7 +62,9 @@ class Javac(private val javaFiles: Collection<File>,
     val JAVA_LANG_OBJECT by lazy { findClassInSymbols(CommonClassNames.JAVA_LANG_OBJECT) }
 
     private val context = Context()
-    private val javac = JavaCompiler(context)
+    private val javac = object : JavaCompiler(context) {
+        override fun parseFiles(files: Iterable<JavaFileObject>?) = compilationUnits
+    }
     private val fileManager = context[JavaFileManager::class.java] as JavacFileManager
 
     init {
@@ -72,7 +79,7 @@ class Javac(private val javaFiles: Collection<File>,
     private val trees by lazy { JavacTrees.instance(context) }
     private val elements by lazy { JavacElements.instance(context) }
     private val fileObjects by lazy { fileManager.getJavaFileObjectsFromFiles(javaFiles).toList().toJavacList() }
-    private val compilationUnits by lazy { javac.parseFiles(fileObjects) }
+    private val compilationUnits: JavacList<JCTree.JCCompilationUnit> by lazy { fileObjects.map(javac::parse).toJavacList() }
 
     private val javaClasses: List<JavaClass> by lazy {
         compilationUnits.flatMap { it.typeDecls.map { type -> Pair(it, type) } }
@@ -83,18 +90,8 @@ class Javac(private val javaFiles: Collection<File>,
         compilationUnits.map { JCPackage(it.packageName.toString(), this) }
     }
 
-    fun compile() = fileManager.apply {
-        setLocation(StandardLocation.CLASS_PATH,
-                    getLocation(StandardLocation.CLASS_PATH) + getLocation(StandardLocation.CLASS_OUTPUT))
-    }.let {
-        with(Context()) {
-            put(JavaFileManager::class.java, it)
-            JavaCompiler(this).apply {
-                compile(fileObjects)
-                close()
-            }
-        }
-    }
+    fun compile() = fileManager.setClassPathBeforeCompilation()
+            .let { javac.compile(fileObjects) }
 
     override fun close() {
         fileManager.close()
@@ -150,5 +147,33 @@ class Javac(private val javaFiles: Collection<File>,
     private fun findClassInSymbols(fqName: String) = elements.getTypeElement(fqName)?.let { JavacClass(it, this) }
 
     private fun findPackageInSymbols(fqName: String) = elements.getPackageElement(fqName)?.let { JavacPackage(it, this) }
+
+    private fun JavacFileManager.setClassPathBeforeCompilation() = apply {
+        setLocation(StandardLocation.CLASS_PATH,
+                    getLocation(StandardLocation.CLASS_PATH) + getLocation(StandardLocation.CLASS_OUTPUT))
+
+        val reader = ClassReader.instance(context)
+        val names = Names.instance(context)
+        val outDirName = getLocation(StandardLocation.CLASS_OUTPUT).firstOrNull()?.path ?: ""
+
+        list(StandardLocation.CLASS_OUTPUT, "", setOf(JavaFileObject.Kind.CLASS), true)
+                .forEach {
+                    val fqName = it.name
+                            .substringAfter(outDirName)
+                            .substringBefore(".class")
+                            .replace("/", ".")
+                            .let { if (it.startsWith(".")) it.substring(1) else it }
+                            .let(names::fromString)
+
+                    symbols.classes[fqName]?.let { symbols.classes[fqName] = null }
+                    val symbol = reader.enterClass(fqName, it)
+
+                    (elements.getPackageOf(symbol) as? Symbol.PackageSymbol)?.let {
+                        it.members_field.enter(symbol)
+                        it.flags_field = it.flags_field + Flags.EXISTS.toLong()
+                    }
+                }
+
+    }
 
 }
