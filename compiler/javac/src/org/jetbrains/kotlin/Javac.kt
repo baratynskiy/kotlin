@@ -170,7 +170,7 @@ class Javac(private val javaFiles: Collection<File>,
 
                     (elements.getPackageOf(symbol) as? Symbol.PackageSymbol)?.let {
                         it.members_field.enter(symbol)
-                        it.flags_field = it.flags_field + Flags.EXISTS.toLong()
+                        it.flags_field = it.flags_field and Flags.EXISTS.toLong()
                     }
                 }
 
