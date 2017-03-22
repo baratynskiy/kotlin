@@ -70,4 +70,16 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         doTest(fileName)
     }
 
+    @TestMetadata("Method.kt")
+    fun testMethod() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/Method.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("MethodWithArgument.kt")
+    fun testMethodWithArgument() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/MethodWithArgument.kt")
+        doTest(fileName)
+    }
+
 }

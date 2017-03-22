@@ -29,11 +29,10 @@ import org.jetbrains.kotlin.name.SpecialNames
 abstract class ClassifierType<out T : JCTree>(tree: T,
                                               treePath: TreePath,
                                               javac: Javac) : JCType<T>(tree, treePath, javac), JavaClassifierType {
-    override val classifier
-        get() = getClassifier(treePath, javac)
+    override val classifier by lazy { getClassifier(treePath, javac) }
 
     override val canonicalText
-        get() = treePath.getFqName(javac).asString()
+        get() = classifier.fqName?.asString() ?: treePath.leaf.toString()
 
     override val presentableText
         get() = canonicalText
@@ -48,7 +47,7 @@ class JCClassifierType<out T : JCTree.JCExpression>(tree: T,
         get() = emptyList()
 
     override val isRaw: Boolean
-        get() = isRaw(treePath, javac)
+        get() = classifier.typeParameters.isNotEmpty()
 
 }
 
@@ -62,12 +61,6 @@ class JCClassifierTypeWithTypeArgument<out T : JCTree.JCTypeApply>(tree: T,
     override val isRaw: Boolean
         get() = false
 
-}
-
-private fun isRaw(treePath: TreePath, javac: Javac): Boolean {
-    val classifier = getClassifier(treePath, javac)
-
-    return classifier.typeParameters.isNotEmpty()
 }
 
 private fun getClassifier(treePath: TreePath, javac: Javac) = treePath.getFqName(javac).let { javac.findClass(it) }

@@ -1,1 +1,12 @@
-test
+package test
+
+public fun getSingleton(): test.Singleton!
+
+public final class Singleton {
+    private constructor Singleton()
+
+    // Static members
+    private final var INSTANCE: test.Singleton!
+    public open fun getInstance(): test.Singleton!
+    public open fun getString(): kotlin.String!
+}

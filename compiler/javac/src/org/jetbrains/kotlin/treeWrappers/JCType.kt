@@ -39,17 +39,13 @@ abstract class JCType<out T : JCTree>(val tree: T,
         }
     }
 
-    override val annotations: Collection<JavaAnnotation> = emptyList()
+    override val annotations = emptyList<JavaAnnotation>()
 
     override val isDeprecatedInJavaDoc = false
 
     override fun findAnnotation(fqName: FqName) = null
 
-    override fun equals(other: Any?): Boolean {
-        if (other !is JCType<*>) return false
-
-        return tree == other.tree
-    }
+    override fun equals(other: Any?) = (other as? JCType<*>)?.tree == tree
 
     override fun hashCode() = tree.hashCode()
 
