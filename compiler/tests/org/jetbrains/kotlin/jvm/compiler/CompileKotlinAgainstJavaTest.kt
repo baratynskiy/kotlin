@@ -57,4 +57,17 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/CyclicDependencies.kt")
         doTest(fileName)
     }
+
+    @TestMetadata("Enum.kt")
+    fun testEnum() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/Enum.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("Singleton.kt")
+    fun testSingleton() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/Singleton.kt")
+        doTest(fileName)
+    }
+
 }

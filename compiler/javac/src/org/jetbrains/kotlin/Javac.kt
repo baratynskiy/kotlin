@@ -16,8 +16,11 @@
 
 package org.jetbrains.kotlin
 
+import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.CommonClassNames
 import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.search.GlobalSearchScope
@@ -40,8 +43,8 @@ import org.jetbrains.kotlin.elementWrappers.JavacPackage
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaPackage
 import org.jetbrains.kotlin.name.FqName
-import org.jetbrains.kotlin.name.isChildOf
 import org.jetbrains.kotlin.name.isSubpackageOf
+import org.jetbrains.kotlin.name.parentOrNull
 import org.jetbrains.kotlin.treeWrappers.JCClass
 import org.jetbrains.kotlin.treeWrappers.JCPackage
 import java.io.Closeable
@@ -78,11 +81,12 @@ class Javac(private val javaFiles: Collection<File>,
     private val symbols by lazy { Symtab.instance(context) }
     private val trees by lazy { JavacTrees.instance(context) }
     private val elements by lazy { JavacElements.instance(context) }
-    private val fileObjects by lazy { fileManager.getJavaFileObjectsFromFiles(javaFiles).toList().toJavacList() }
+    private val fileObjects by lazy { fileManager.getJavaFileObjectsFromFiles(javaFiles).toJavacList() }
     private val compilationUnits: JavacList<JCTree.JCCompilationUnit> by lazy { fileObjects.map(javac::parse).toJavacList() }
 
     private val javaClasses: List<JavaClass> by lazy {
-        compilationUnits.flatMap { it.typeDecls.map { type -> Pair(it, type) } }
+        compilationUnits
+                .flatMap { unit -> unit.typeDecls.map { unit to it } }
                 .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
     }
 
@@ -98,49 +102,36 @@ class Javac(private val javaFiles: Collection<File>,
         javac.close()
     }
 
-    fun findClass(fqName: FqName, scope: GlobalSearchScope) = scope.let {
-        if (it is EverythingGlobalScope) return findClass(fqName)
-        if ("$it".startsWith("NOT:"))
-            findClassInSymbols(fqName.asString())
-        else
-            javaClasses.find { it.fqName == fqName }
+    fun findClass(fqName: FqName, scope: GlobalSearchScope = EverythingGlobalScope()) = when {
+        scope is EverythingGlobalScope -> findClass(fqName)
+        scope.contains(AnyJavaSourceVirtualFile) -> javaClasses.find { it.fqName == fqName }
+        else -> findClassInSymbols(fqName.asString())
     }
 
-    fun findClass(fqName: FqName) = javaClasses.find { it.fqName == fqName } ?: findClassInSymbols(fqName.asString())
-
-    fun findPackage(fqName: FqName, scope: GlobalSearchScope): JavaPackage? = scope.let {
-        if (it is EverythingGlobalScope) return findPackage(fqName)
-        if ("$it".startsWith("NOT:"))
-            findPackageInSymbols(fqName.asString())
-        else javaPackages.find { it.fqName == fqName }
+    fun findPackage(fqName: FqName, scope: GlobalSearchScope) = when {
+        scope is EverythingGlobalScope -> findPackage(fqName)
+        scope.contains(AnyJavaSourceVirtualFile) -> javaPackages.find { it.fqName == fqName }
+        else -> findPackageInSymbols(fqName.asString())
     }
 
     fun findSubPackages(fqName: FqName) = symbols.packages
-            .filter { (k, _) ->
-                k.toString().startsWith(fqName.asString()) && k.toString() != fqName.asString()
-            }
-            .map { JavacPackage(it.value, this) }
-            .toMutableList<JavaPackage>()
-            .apply {
-                javaPackages.filter { it.fqName.isSubpackageOf(fqName) && it.fqName != fqName }
-                        .let(this::addAll)
-            }
+            .filter { (k, _) -> k.toString().startsWith("$fqName.") }
+            .map { JavacPackage(it.value, this) } + javaPackages
+            .filter { it.fqName.isSubpackageOf(fqName) && it.fqName != fqName }
 
-    fun findClassesFromPackage(fqName: FqName) = javaClasses
-            .filter { it.fqName?.isChildOf(fqName) ?: false }
-            .toMutableSet()
-            .also {
-                elements.getPackageElement(fqName.asString())
-                        ?.members()
-                        ?.elements
-                        ?.filterIsInstance(TypeElement::class.java)
-                        ?.map { JavacClass(it, this) }
-                        ?.let(it::addAll)
-            }
+    fun findClassesFromPackage(fqName: FqName) = javaClasses.filter { it.fqName?.parentOrNull() == fqName } +
+                                                 elements.getPackageElement(fqName.asString())
+                                                         ?.members()
+                                                         ?.elements
+                                                         ?.filterIsInstance(TypeElement::class.java)
+                                                         ?.map { JavacClass(it, this) }
+                                                         .orEmpty()
 
     fun getTreePath(tree: JCTree, compilationUnit: CompilationUnitTree): TreePath = trees.getPath(compilationUnit, tree)
 
-    private inline fun <reified T> List<T>.toJavacList() = JavacList.from(toTypedArray())
+    private inline fun <reified T> Iterable<T>.toJavacList() = JavacList.from(this)
+
+    private fun findClass(fqName: FqName) = javaClasses.find { it.fqName == fqName } ?: findClassInSymbols(fqName.asString())
 
     private fun findPackage(fqName: FqName) = javaPackages.find { it.fqName == fqName } ?: findPackageInSymbols(fqName.asString())
 
@@ -170,10 +161,46 @@ class Javac(private val javaFiles: Collection<File>,
 
                     (elements.getPackageOf(symbol) as? Symbol.PackageSymbol)?.let {
                         it.members_field.enter(symbol)
-                        it.flags_field = it.flags_field and Flags.EXISTS.toLong()
+                        it.flags_field = it.flags_field or Flags.EXISTS.toLong()
                     }
                 }
 
     }
 
+}
+
+private object AnyJavaSourceVirtualFile : VirtualFile()  {
+    override fun refresh(asynchronous: Boolean, recursive: Boolean, postRunnable: Runnable?) {}
+
+    override fun getLength() = 0L
+
+    override fun getFileSystem() = throw UnsupportedOperationException()
+
+    override fun getPath() = ""
+
+    override fun isDirectory() = false
+
+    override fun getTimeStamp() = 0L
+
+    override fun getName() = ""
+
+    override fun contentsToByteArray() = throw UnsupportedOperationException()
+
+    override fun isValid() = true
+
+    override fun getInputStream() = throw UnsupportedOperationException()
+
+    override fun getParent() = throw UnsupportedOperationException()
+
+    override fun getChildren(): Array<VirtualFile> = emptyArray()
+
+    override fun isWritable() = false
+
+    override fun getOutputStream(requestor: Any?, newModificationStamp: Long, newTimeStamp: Long) = throw UnsupportedOperationException()
+
+    override fun getExtension() = "java"
+
+    override fun getFileType(): FileType = JavaFileType.INSTANCE
+
+    override fun toString() = "Java Source"
 }

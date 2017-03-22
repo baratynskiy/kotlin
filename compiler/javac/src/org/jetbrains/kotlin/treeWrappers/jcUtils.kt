@@ -94,7 +94,7 @@ fun JavaClass.computeClassId(): ClassId? {
     val outer = outerClass
     outer?.let {
         val parentClassId = outer.computeClassId() ?: return null
-        return parentClassId.createNestedClassId(this.name)
+        return parentClassId.createNestedClassId(name)
     }
 
     return fqName?.let { ClassId.topLevel(it) }

@@ -18,24 +18,19 @@ package org.jetbrains.kotlin.jvm.compiler
 
 import com.intellij.openapi.Disposable
 import org.jetbrains.kotlin.Javac
-import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.codegen.forTestCompile.ForTestCompileRuntime
-import org.jetbrains.kotlin.descriptors.PackageViewDescriptor
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.renderer.*
 import org.jetbrains.kotlin.resolve.lazy.JvmResolveUtil
 import org.jetbrains.kotlin.test.ConfigurationKind
 import org.jetbrains.kotlin.test.TestCaseWithTmpdir
 import org.jetbrains.kotlin.test.TestJdkKind
-import org.jetbrains.kotlin.test.util.RecursiveDescriptorComparator
 import org.junit.Assert
 
 import java.io.File
 import java.io.IOException
 import java.lang.annotation.Retention
-import java.util.Collections
 
 import org.jetbrains.kotlin.test.KotlinTestUtils.*
 import org.jetbrains.kotlin.test.util.RecursiveDescriptorComparator.validateAndCompareDescriptorWithFile
@@ -85,7 +80,13 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
             val mkdirs = outDir.mkdirs()
             assert(mkdirs) { "Not created: " + outDir }
         }
-        org.jetbrains.kotlin.Javac.getInstance(environment.project).use(Javac::compile)
+//        if (!javaFiles.isEmpty()) {
+//            compileJavaFiles(javaFiles, listOf(
+//                    "-classpath", outDir.path + File.pathSeparator + ForTestCompileRuntime.runtimeJarForTests(),
+//                    "-d", outDir.path
+//            ), javaErrorFile)
+//        }
+        Javac.getInstance(environment.project).use(Javac::compile)
     }
 
     companion object {

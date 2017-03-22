@@ -70,7 +70,7 @@ private fun isRaw(treePath: TreePath, javac: Javac): Boolean {
     return classifier.typeParameters.isNotEmpty()
 }
 
-private fun getClassifier(treePath: TreePath, javac: Javac) = treePath.getFqName(javac).let(javac::findClass)
+private fun getClassifier(treePath: TreePath, javac: Javac) = treePath.getFqName(javac).let { javac.findClass(it) }
                                                               ?: createStubClassifier(treePath, javac)
 
 private fun createStubClassifier(treePath: TreePath, javac: Javac) = object : JavaClass {
