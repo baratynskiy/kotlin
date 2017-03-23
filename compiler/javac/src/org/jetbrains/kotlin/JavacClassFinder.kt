@@ -22,6 +22,7 @@ import com.intellij.psi.search.DelegatingGlobalSearchScope
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.load.java.JavaClassFinder
+import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.BindingTrace

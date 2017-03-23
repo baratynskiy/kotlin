@@ -16,12 +16,14 @@
 
 package org.jetbrains.kotlin.treeWrappers
 
+import com.intellij.psi.CommonClassNames
 import com.sun.source.tree.Tree
 import com.sun.source.util.TreePath
 import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.tree.TreeInfo
 import org.jetbrains.kotlin.Javac
+import org.jetbrains.kotlin.elementWrappers.JavacClassifierType
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
@@ -71,6 +73,10 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
 
             tree.extending?.mapToJavaClassifierType()?.let(this::add)
             tree.implementing?.map { it.mapToJavaClassifierType() }?.filterNotNull()?.let(this::addAll)
+
+            if (find { it.canonicalText == CommonClassNames.JAVA_LANG_OBJECT } == null) {
+                javac.JAVA_LANG_OBJECT?.let { add(JavacClassifierType(it.element.asType(), javac)) }
+            }
         }
 
     override val innerClasses

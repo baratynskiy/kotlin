@@ -32,10 +32,22 @@ abstract class ClassifierType<out T : JCTree>(tree: T,
     override val classifier by lazy { getClassifier(treePath, javac) }
 
     override val canonicalText
-        get() = classifier.fqName?.asString() ?: treePath.leaf.toString()
+        get() = (classifier as? JavaClass)?.fqName?.asString() ?: treePath.leaf.toString()
 
     override val presentableText
         get() = canonicalText
+
+    private val typeParameter by lazy {
+        treePath.filter { it is JCTree.JCClassDecl || it is JCTree.JCMethodDecl }
+                .flatMap {
+                    when (it) {
+                        is JCTree.JCClassDecl -> it.typarams
+                        is JCTree.JCMethodDecl -> it.typarams
+                        else -> emptyList<JCTypeParameter<*>>()
+                    }
+                }
+                .find { it.toString().substringBefore(" ") == treePath.leaf.toString() }
+    }
 
 }
 
@@ -47,7 +59,7 @@ class JCClassifierType<out T : JCTree.JCExpression>(tree: T,
         get() = emptyList()
 
     override val isRaw: Boolean
-        get() = classifier.typeParameters.isNotEmpty()
+        get() = (classifier as? JavaClass)?.typeParameters?.isNotEmpty() ?: false
 
 }
 
@@ -64,7 +76,22 @@ class JCClassifierTypeWithTypeArgument<out T : JCTree.JCTypeApply>(tree: T,
 }
 
 private fun getClassifier(treePath: TreePath, javac: Javac) = treePath.getFqName(javac).let { javac.findClass(it) }
+                                                              ?: typeParameter(treePath, javac)
                                                               ?: createStubClassifier(treePath, javac)
+
+private fun typeParameter(treePath: TreePath, javac: Javac) = treePath
+        .filter { it is JCTree.JCClassDecl || it is JCTree.JCMethodDecl }
+        .flatMap {
+            when (it) {
+                is JCTree.JCClassDecl -> it.typarams
+                is JCTree.JCMethodDecl -> it.typarams
+                else -> emptyList<JCTree.JCTypeParameter>()
+            }
+        }
+        .find { it.toString().substringBefore(" ") == treePath.leaf.toString() }
+        ?.let { JCTypeParameter(it,
+                                javac.getTreePath(it, treePath.compilationUnit),
+                                javac) }
 
 private fun createStubClassifier(treePath: TreePath, javac: Javac) = object : JavaClass {
     override val isAbstract: Boolean

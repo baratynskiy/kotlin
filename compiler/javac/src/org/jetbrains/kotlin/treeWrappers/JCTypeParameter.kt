@@ -38,12 +38,11 @@ class JCTypeParameter<out T : JCTree.JCTypeParameter>(tree: T,
 
     override val upperBounds: Collection<JavaClassifierType>
         get() = tree.bounds.map {
-            val type: JavaClassifierType? = when(it) {
+            when(it) {
                 is JCTree.JCTypeApply -> JCClassifierTypeWithTypeArgument(it, TreePath(treePath, it), javac)
                 is JCTree.JCIdent -> JCClassifierType(it, TreePath(treePath, it), javac)
                 else -> null
             }
-            type
         }.filterNotNull()
 
 }

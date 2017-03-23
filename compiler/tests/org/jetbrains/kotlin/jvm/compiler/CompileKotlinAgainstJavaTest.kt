@@ -82,4 +82,22 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         doTest(fileName)
     }
 
+    @TestMetadata("SimpleAnnotation.kt")
+    fun testSimpleAnnotation() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/SimpleAnnotation.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("AnnotationWithArguments.kt")
+    fun testAnnotationWithArguments() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/AnnotationWithArguments.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("ClassWithTypeParameter.kt")
+    fun testClassWithTypeParameter() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/ClassWithTypeParameter.kt")
+        doTest(fileName)
+    }
+
 }
