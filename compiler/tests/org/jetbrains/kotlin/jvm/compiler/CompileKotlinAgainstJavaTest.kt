@@ -112,4 +112,28 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         doTest(fileName)
     }
 
+    @TestMetadata("RawReturnType.kt")
+    fun testRawReturnType() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/RawReturnType.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("Vararg.kt")
+    fun testVararg() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/Vararg.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("StaticNestedClass.kt")
+    fun testStaticNestedClass() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/StaticNestedClass.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("InnerClass.kt")
+    fun testInnerClass() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/InnerClass.kt")
+        doTest(fileName)
+    }
+
 }
