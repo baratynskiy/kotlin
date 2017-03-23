@@ -18,7 +18,7 @@ package org.jetbrains.kotlin.frontend.java.di
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
-import org.jetbrains.kotlin.JavacClassFinder
+import org.jetbrains.kotlin.components.JavacClassFinder
 import org.jetbrains.kotlin.components.JavacJavaPropertyInitializerEvaluator
 import org.jetbrains.kotlin.components.JavacJavaResolverCache
 import org.jetbrains.kotlin.components.JavacSourceElementFactory

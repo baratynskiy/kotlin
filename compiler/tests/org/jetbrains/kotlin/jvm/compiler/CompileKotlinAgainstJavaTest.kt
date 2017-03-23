@@ -94,6 +94,12 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         doTest(fileName)
     }
 
+    @TestMetadata("TypeParameter.kt")
+    fun testTypeParameter() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/TypeParameter.kt")
+        doTest(fileName)
+    }
+
     @TestMetadata("ClassWithTypeParameter.kt")
     fun testClassWithTypeParameter() {
         val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/ClassWithTypeParameter.kt")

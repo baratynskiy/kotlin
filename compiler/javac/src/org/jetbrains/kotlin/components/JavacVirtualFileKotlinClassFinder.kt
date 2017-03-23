@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.load.kotlin.KotlinBinaryClassCache
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
 import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClassFinder
 import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.treeWrappers.computeClassId
+import org.jetbrains.kotlin.wrappers.trees.computeClassId
 
 
 abstract class JavacVirtualFileKotlinClassFinder : VirtualFileKotlinClassFinder() {
