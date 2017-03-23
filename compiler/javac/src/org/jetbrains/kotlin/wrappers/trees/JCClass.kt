@@ -30,9 +30,9 @@ import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.SpecialNames
 
-class JCClass<out T : com.sun.tools.javac.tree.JCTree.JCClassDecl>(tree: T,
-                                                                   treePath: TreePath,
-                                                                   javac: Javac) : JCClassifier<T>(tree, treePath, javac), JavaClass {
+class JCClass<out T : JCTree.JCClassDecl>(tree: T,
+                                          treePath: TreePath,
+                                          javac: Javac) : JCClassifier<T>(tree, treePath, javac), JavaClass {
 
     override val name
         get() = SpecialNames.safeIdentifier(tree.simpleName.toString())
@@ -58,9 +58,11 @@ class JCClass<out T : com.sun.tools.javac.tree.JCTree.JCClassDecl>(tree: T,
         get() = tree.typeParameters.map { JCTypeParameter(it, TreePath(treePath, it), javac) }
 
     override val fqName
-        get() =  treePath.reversed()
-                .joinToString(separator = ".") { (it as? JCTree.JCCompilationUnit)?.packageName?.toString()
-                                                 ?: (it as JCTree.JCClassDecl).name }
+        get() = treePath.reversed()
+                .joinToString(separator = ".") {
+                    (it as? JCTree.JCCompilationUnit)?.packageName?.toString()
+                    ?: (it as JCTree.JCClassDecl).name
+                }
                 .let(::FqName)
 
     override val supertypes
