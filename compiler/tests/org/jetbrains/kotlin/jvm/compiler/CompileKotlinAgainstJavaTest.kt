@@ -112,6 +112,12 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         doTest(fileName)
     }
 
+    @TestMetadata("SimpleWildcard.kt")
+    fun testSimpleWildcard() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/SimpleWildcard.kt")
+        doTest(fileName)
+    }
+
     @TestMetadata("RawReturnType.kt")
     fun testRawReturnType() {
         val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/RawReturnType.kt")

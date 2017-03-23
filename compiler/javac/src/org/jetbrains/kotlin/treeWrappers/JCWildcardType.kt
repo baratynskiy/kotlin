@@ -20,17 +20,16 @@ import com.sun.source.util.TreePath
 import com.sun.tools.javac.code.BoundKind
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.Javac
-import org.jetbrains.kotlin.load.java.structure.JavaType
 import org.jetbrains.kotlin.load.java.structure.JavaWildcardType
 
 class JCWildcardType<out T : JCTree.JCWildcard>(tree: T,
                                                 treePath: TreePath,
                                                 javac: Javac) : JCType<T>(tree, treePath, javac), JavaWildcardType {
 
-    override val bound: JavaType?
-        get() = create(tree.bound, treePath, javac)
+    override val bound
+        get() = tree.bound?.let { create(it, treePath, javac) }
 
-    override val isExtends: Boolean
+    override val isExtends
         get() = tree.kind.kind == BoundKind.EXTENDS
 
 }
