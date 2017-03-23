@@ -100,4 +100,16 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         doTest(fileName)
     }
 
+    @TestMetadata("MethodWithTypeParameter.kt")
+    fun testMethodWithTypeParameter() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/MethodWithTypeParameter.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("MethodWithWildcard.kt")
+    fun testMethodWithWildcard() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/MethodWithWildcard.kt")
+        doTest(fileName)
+    }
+
 }

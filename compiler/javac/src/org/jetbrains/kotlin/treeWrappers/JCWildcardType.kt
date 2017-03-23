@@ -16,8 +16,8 @@
 
 package org.jetbrains.kotlin.treeWrappers
 
-import com.sun.source.tree.Tree
 import com.sun.source.util.TreePath
+import com.sun.tools.javac.code.BoundKind
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.Javac
 import org.jetbrains.kotlin.load.java.structure.JavaType
@@ -31,6 +31,6 @@ class JCWildcardType<out T : JCTree.JCWildcard>(tree: T,
         get() = create(tree.bound, treePath, javac)
 
     override val isExtends: Boolean
-        get() = tree.kind == Tree.Kind.EXTENDS_WILDCARD
+        get() = tree.kind.kind == BoundKind.EXTENDS
 
 }
