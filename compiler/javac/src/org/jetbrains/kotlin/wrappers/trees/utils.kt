@@ -87,8 +87,6 @@ private fun TreePath.tryToResolve(name: String,
     val classes = javac.findClassesFromPackage(FqName("${compilationUnit.packageName}"))
             .filter { it.name.asString() == simpleName }
 
-    classes.find { it.outerClass == null }?.let { return it.fqName!! to it }
-
     val outerClass = parentPath.find { it is JCTree.JCClassDecl } as? JCTree.JCClassDecl
                      ?: return FqName("${compilationUnit.packageName}.$name") to null
 
@@ -96,6 +94,8 @@ private fun TreePath.tryToResolve(name: String,
         it.fqName!!.asString().contains(simpleName)
         && it.fqName!!.asString().contains(outerClass.name.toString())
     }?.let { return it.fqName!! to it }
+
+    classes.find { it.outerClass == null }?.let { return it.fqName!! to it }
 
     return FqName("${compilationUnit.packageName}.$name") to null
 }
