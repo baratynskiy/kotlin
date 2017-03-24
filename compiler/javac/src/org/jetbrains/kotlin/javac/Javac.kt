@@ -94,7 +94,10 @@ class Javac(private val javaFiles: Collection<File>,
         compilationUnits.map { JCPackage(it.packageName.toString(), this) }
     }
 
-    fun compile() = fileManager.setClassPathBeforeCompilation().let { javac.compile(fileObjects) }
+    fun compile() = fileManager.setClassPathBeforeCompilation().let {
+        javac.compile(fileObjects)
+        javac.errorCount() == 0
+    }
 
     override fun close() {
         fileManager.close()
