@@ -178,4 +178,22 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         doTest(fileName)
     }
 
+    @TestMetadata("SeveralInnerClasses.kt")
+    fun testSeveralInnerClasses() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/SeveralInnerClasses.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("ReturnTypeResolution.kt")
+    fun testReturnTypeResolution() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/ReturnTypeResolution.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("AsteriskInImport.kt")
+    fun testAsteriskInImport() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/AsteriskInImport.kt")
+        doTest(fileName)
+    }
+
 }
