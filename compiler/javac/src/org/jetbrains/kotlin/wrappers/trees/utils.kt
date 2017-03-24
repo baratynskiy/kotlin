@@ -52,41 +52,37 @@ val JCTree.JCModifiers.visibility
 val TreePath.annotations
         get() = AnnotationSearcher(this).get()
 
-fun TreePath.getFqName(javac: Javac): FqName {
+fun TreePath.resolve(javac: Javac): Pair<FqName, JavaClass?> {
     val simpleName = leaf.toString().substringBefore("<").substringAfter("@")
     val compilationUnit = compilationUnit as JCTree.JCCompilationUnit
 
     val importStatement = compilationUnit.imports.firstOrNull { it.qualifiedIdentifier.toString().endsWith(".$simpleName") }
-    importStatement?.let { return FqName(it.qualifiedIdentifier.toString()) }
-
-    fun JCTree.JCClassDecl.innerClasses(): List<JCTree.JCClassDecl> = arrayListOf(this).also {
-        it.addAll(members.filterIsInstance<JCTree.JCClassDecl>()
-                          .flatMap(JCTree.JCClassDecl::innerClasses))
+    importStatement?.let {
+        val fqName = FqName(it.qualifiedIdentifier.toString())
+        return fqName to javac.findClass(fqName)
     }
 
     if (simpleName.contains(".")) {
         val packageName = compilationUnit.packageName.toString()
         val fqName = "$packageName.$simpleName"
 
-        return javac.findClass(FqName(fqName))?.fqName ?: FqName(simpleName)
+        return javac.findClass(FqName(fqName))?.let { it.fqName!! to it}
+               ?: with(FqName(simpleName)) { this to javac.findClass(this) }
     }
 
-    compilationUnit.typeDecls
-            .filterIsInstance<JCTree.JCClassDecl>()
-            .flatMap(JCTree.JCClassDecl::innerClasses)
+    javac.findClass(FqName("java.lang.$simpleName"))
+            ?.let { return it.fqName!! to it }
+
+    val outerClass = parentPath.find { it is JCTree.JCClassDecl } as? JCTree.JCClassDecl
+    return javac.findClassesFromPackage(FqName("${compilationUnit.packageName}"))
+            .filter { it.name.asString() == simpleName }
             .filter {
-                it.simpleName.toString() == simpleName
+                it.outerClass?.let {
+                    outerClass?.let { outer -> outer.simpleName.toString() == it.name.asString() } ?: false
+                } ?: true
             }
             .firstOrNull()
-            ?.let {
-                val type = JCClass(it, javac.getTreePath(it, compilationUnit), javac)
-                return type.fqName
-            }
-
-    javac.findClass(FqName("java.lang.$simpleName"))
-            ?.let { return it.fqName!! }
-
-    return FqName("${compilationUnit.packageName}.$simpleName")
+            ?.let { it.fqName!! to it } ?: FqName("${compilationUnit.packageName}.$simpleName") to null
 }
 
 fun JavaClass.computeClassId(): ClassId? {

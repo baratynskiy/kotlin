@@ -75,7 +75,7 @@ class JCClassifierTypeWithTypeArgument<out T : JCTree.JCTypeApply>(tree: T,
 
 }
 
-private fun getClassifier(treePath: TreePath, javac: Javac) = treePath.getFqName(javac).let { javac.findClass(it) }
+private fun getClassifier(treePath: TreePath, javac: Javac) = treePath.resolve(javac).second
                                                               ?: typeParameter(treePath, javac)
                                                               ?: createStubClassifier(treePath, javac)
 
@@ -111,7 +111,7 @@ private fun createStubClassifier(treePath: TreePath, javac: Javac) = object : Ja
         get() = emptyList()
 
     override val fqName: FqName?
-        get() = treePath.getFqName(javac)
+        get() = treePath.resolve(javac).first
 
     override val supertypes: Collection<JavaClassifierType>
         get() = emptyList()

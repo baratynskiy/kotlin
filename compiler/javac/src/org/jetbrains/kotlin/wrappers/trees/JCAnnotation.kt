@@ -36,6 +36,6 @@ class JCAnnotation(val annotation: JCTree.JCAnnotation,
     override val classId: ClassId?
         get() = resolve()?.computeClassId()
 
-    override fun resolve() = javac.findClass(TreePath.getPath(treePath.compilationUnit, annotation.annotationType).getFqName(javac))
+    override fun resolve() = TreePath.getPath(treePath.compilationUnit, annotation.annotationType).resolve(javac).second
 
 }

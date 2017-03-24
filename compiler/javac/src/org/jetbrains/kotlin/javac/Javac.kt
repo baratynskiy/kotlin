@@ -88,6 +88,7 @@ class Javac(private val javaFiles: Collection<File>,
         compilationUnits
                 .flatMap { unit -> unit.typeDecls.map { unit to it } }
                 .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
+                .flatMap { it.withInnerClasses() }
     }
 
     private val javaPackages: List<JavaPackage> by lazy {
@@ -118,7 +119,8 @@ class Javac(private val javaFiles: Collection<File>,
                                                   .map { JavacPackage(it.value, this) } + javaPackages
                                                   .filter { it.fqName.isSubpackageOf(fqName) && it.fqName != fqName }
 
-    fun findClassesFromPackage(fqName: FqName) = javaClasses.filter { it.fqName?.parentOrNull() == fqName } +
+    fun findClassesFromPackage(fqName: FqName) = javaClasses.filter { it.fqName?.parentOrNull() == fqName }
+                                                         .flatMap { listOf(it) + it.innerClasses } +
                                                  elements.getPackageElement(fqName.asString())
                                                          ?.members()
                                                          ?.elements
@@ -165,6 +167,8 @@ class Javac(private val javaFiles: Collection<File>,
                 }
 
     }
+
+    private fun JCClass<*>.withInnerClasses(): List<JavaClass> = listOf(this) + innerClasses.flatMap { it.withInnerClasses() }
 
 }
 
