@@ -64,8 +64,7 @@ fun TreePath.getFqName(javac: Javac): FqName {
                           .flatMap(JCTree.JCClassDecl::innerClasses))
     }
 
-    val isInner = simpleName.contains(".")
-    if (isInner) {
+    if (simpleName.contains(".")) {
         val packageName = compilationUnit.packageName.toString()
         val fqName = "$packageName.$simpleName"
 

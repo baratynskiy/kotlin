@@ -112,6 +112,12 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         doTest(fileName)
     }
 
+    @TestMetadata("MethodWithSeveralTypeParameters.kt")
+    fun testMethodWithSeveralTypeParameters() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/MethodWithSeveralTypeParameters.kt")
+        doTest(fileName)
+    }
+
     @TestMetadata("MethodWithWildcard.kt")
     fun testMethodWithWildcard() {
         val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/MethodWithWildcard.kt")
@@ -145,6 +151,18 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
     @TestMetadata("InnerClass.kt")
     fun testInnerClass() {
         val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/InnerClass.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("ReturnType.kt")
+    fun testReturnType() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/ReturnType.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("ReturnNested.kt")
+    fun testReturnNested() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/ReturnNested.kt")
         doTest(fileName)
     }
 

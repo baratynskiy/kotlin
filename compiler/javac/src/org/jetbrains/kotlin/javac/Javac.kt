@@ -110,7 +110,7 @@ class Javac(private val javaFiles: Collection<File>,
     fun findPackage(fqName: FqName, scope: GlobalSearchScope) = when {
         scope is EverythingGlobalScope -> findPackage(fqName)
         scope.contains(AnyJavaSourceVirtualFile) -> javaPackages.find { it.fqName == fqName }
-        else -> findPackageInSymbols(fqName.asString())
+        else -> findPackageInSymbols(fqName.asString()) ?: javaPackages.find { it.fqName == fqName }
     }
 
     fun findSubPackages(fqName: FqName) = symbols.packages

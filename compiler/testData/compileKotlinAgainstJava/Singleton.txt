@@ -1,6 +1,7 @@
 package test
 
 public fun getSingleton(): test.Singleton!
+public fun getString(): kotlin.String!
 
 public final class Singleton {
     private constructor Singleton()
