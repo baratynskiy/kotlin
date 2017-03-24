@@ -105,7 +105,7 @@ class Javac(private val javaFiles: Collection<File>,
     fun findClass(fqName: FqName, scope: GlobalSearchScope = EverythingGlobalScope()) = when {
         scope is EverythingGlobalScope -> findClass(fqName)
         scope.contains(AnyJavaSourceVirtualFile) -> javaClasses.find { it.fqName == fqName }
-        else -> findClassInSymbols(fqName.asString())
+        else -> findClassInSymbols(fqName.asString()) ?: javaClasses.find { it.fqName == fqName }
     }
 
     fun findPackage(fqName: FqName, scope: GlobalSearchScope) = when {

@@ -1,1 +1,12 @@
-test
+package test
+
+public fun getNested(): test.ReturnNested.Nested!
+
+public open class ReturnNested {
+    public constructor ReturnNested()
+    public open fun getNested(): test.ReturnNested.Nested!
+
+    public open class Nested {
+        public constructor Nested()
+    }
+}
