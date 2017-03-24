@@ -42,24 +42,27 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
         Assert.assertTrue(ktFilePath.endsWith(".kt"))
         val ktFile = File(ktFilePath)
         val javaFile = File(ktFilePath.replaceFirst("\\.kt$".toRegex(), ".java"))
-        val expectedFile = File(ktFilePath.replaceFirst("\\.kt$".toRegex(), ".txt"))
+
         val javaErrorFile = File(ktFilePath.replaceFirst("\\.kt$".toRegex(), ".javaerr.txt"))
 
         val out = File(tmpdir, "out")
-        compileKotlinWithJava(listOf(javaFile), listOf(ktFile),
-                              out, testRootDisposable, javaErrorFile)
+        val compiledSuccessfully = compileKotlinWithJava(listOf(javaFile),
+                                                        listOf(ktFile),
+                                                        out, testRootDisposable, javaErrorFile)
+        if (!compiledSuccessfully) return
+
         val environment = KotlinCoreEnvironment.createForTests(
                 testRootDisposable,
                 newConfiguration(ConfigurationKind.ALL, TestJdkKind.MOCK_JDK, getAnnotationsJar(), out),
                 EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
-
         environment.registerJavac(emptyList<File>(), out)
 
         val analysisResult = JvmResolveUtil.analyze(environment)
         val packageView = analysisResult.moduleDescriptor.getPackage(LoadDescriptorUtil.TEST_PACKAGE_FQNAME)
         assertFalse("Nothing found in package " + LoadDescriptorUtil.TEST_PACKAGE_FQNAME, packageView.isEmpty())
 
+        val expectedFile = File(ktFilePath.replaceFirst("\\.kt$".toRegex(), ".txt"))
         validateAndCompareDescriptorWithFile(packageView, CONFIGURATION, expectedFile)
     }
 
@@ -70,7 +73,7 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
             outDir: File,
             disposable: Disposable,
             javaErrorFile: File?
-    ) {
+    ): Boolean {
         val environment = createEnvironmentWithMockJdkAndIdeaAnnotations(disposable)
         environment.registerJavac(javaFiles, outDir)
         if (!ktFiles.isEmpty()) {
@@ -80,13 +83,8 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
             val mkdirs = outDir.mkdirs()
             assert(mkdirs) { "Not created: " + outDir }
         }
-//        if (!javaFiles.isEmpty()) {
-//            compileJavaFiles(javaFiles, listOf(
-//                    "-classpath", outDir.path + File.pathSeparator + ForTestCompileRuntime.runtimeJarForTests(),
-//                    "-d", outDir.path
-//            ), javaErrorFile)
-//        }
-        Javac.getInstance(environment.project).use(Javac::compile)
+
+        return Javac.getInstance(environment.project).use(Javac::compile)
     }
 
     companion object {
