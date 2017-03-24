@@ -166,4 +166,16 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         doTest(fileName)
     }
 
+    @TestMetadata("ReturnNestedFQ.kt")
+    fun testReturnNestedFQ() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/ReturnNestedFQ.kt")
+        doTest(fileName)
+    }
+
+    @TestMetadata("ReturnInnerInner.kt")
+    fun testReturnInnerInner() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/ReturnInnerInner.kt")
+        doTest(fileName)
+    }
+
 }

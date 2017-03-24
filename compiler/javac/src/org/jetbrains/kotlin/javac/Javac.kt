@@ -41,7 +41,6 @@ import com.sun.tools.javac.util.List as JavacList
 import org.jetbrains.kotlin.wrappers.symbols.JavacClass
 import org.jetbrains.kotlin.wrappers.symbols.JavacPackage
 import org.jetbrains.kotlin.load.java.structure.JavaClass
-import org.jetbrains.kotlin.load.java.structure.JavaPackage
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.isSubpackageOf
 import org.jetbrains.kotlin.name.parentOrNull
@@ -84,14 +83,14 @@ class Javac(private val javaFiles: Collection<File>,
     private val fileObjects by lazy { fileManager.getJavaFileObjectsFromFiles(javaFiles).toJavacList() }
     private val compilationUnits: JavacList<JCTree.JCCompilationUnit> by lazy { fileObjects.map(javac::parse).toJavacList() }
 
-    private val javaClasses: List<JavaClass> by lazy {
+    private val javaClasses by lazy {
         compilationUnits
                 .flatMap { unit -> unit.typeDecls.map { unit to it } }
                 .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
                 .flatMap { it.withInnerClasses() }
     }
 
-    private val javaPackages: List<JavaPackage> by lazy {
+    private val javaPackages by lazy {
         compilationUnits.map { JCPackage(it.packageName.toString(), this) }
     }
 
@@ -120,7 +119,7 @@ class Javac(private val javaFiles: Collection<File>,
                                                   .filter { it.fqName.isSubpackageOf(fqName) && it.fqName != fqName }
 
     fun findClassesFromPackage(fqName: FqName) = javaClasses.filter { it.fqName?.parentOrNull() == fqName }
-                                                         .flatMap { listOf(it) + it.innerClasses } +
+                                                         .flatMap { it.withInnerClasses() } +
                                                  elements.getPackageElement(fqName.asString())
                                                          ?.members()
                                                          ?.elements
@@ -168,7 +167,7 @@ class Javac(private val javaFiles: Collection<File>,
 
     }
 
-    private fun JCClass<*>.withInnerClasses(): List<JavaClass> = listOf(this) + innerClasses.flatMap { it.withInnerClasses() }
+    private fun JavaClass.withInnerClasses(): List<JavaClass> = listOf(this) + innerClasses.flatMap { it.withInnerClasses() }
 
 }
 
