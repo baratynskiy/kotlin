@@ -72,10 +72,7 @@ import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.STRONG_WARNING
 import org.jetbrains.kotlin.cli.common.toBooleanLenient
 import org.jetbrains.kotlin.cli.jvm.JvmRuntimeVersionsConsistencyChecker
-import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
-import org.jetbrains.kotlin.cli.jvm.config.JvmClasspathRoot
-import org.jetbrains.kotlin.cli.jvm.config.JvmContentRoot
-import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.cli.jvm.config.*
 import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndex
@@ -88,6 +85,7 @@ import org.jetbrains.kotlin.extensions.DeclarationAttributeAltererExtension
 import org.jetbrains.kotlin.extensions.PreprocessedVirtualFileFactoryExtension
 import org.jetbrains.kotlin.extensions.StorageComponentContainerContributor
 import org.jetbrains.kotlin.idea.KotlinFileType
+import org.jetbrains.kotlin.javac.Javac
 import org.jetbrains.kotlin.load.kotlin.KotlinBinaryClassCache
 import org.jetbrains.kotlin.load.kotlin.MetadataFinderFactory
 import org.jetbrains.kotlin.load.kotlin.ModuleVisibilityManager
@@ -216,6 +214,27 @@ class KotlinCoreEnvironment private constructor(
         project.registerService(MetadataFinderFactory::class.java, finderFactory)
         project.registerService(VirtualFileFinderFactory::class.java, finderFactory)
     }
+
+    //temporary------------------------------
+    private val VirtualFile.javaFiles: List<VirtualFile>
+        get() = children.filter { it.extension == "java" }
+                .toMutableList()
+                .apply {
+                    children
+                            .filter(VirtualFile::isDirectory)
+                            .forEach { dir -> addAll(dir.javaFiles) }
+                }
+
+    private val javaFiles
+        get() = configuration.kotlinSourceRoots
+                .mapNotNull(this::findLocalDirectory)
+                .flatMap { it.javaFiles }
+                .map { File(it.canonicalPath) }
+
+    fun registerJavac(files: List<File> = javaFiles, outDir: File? = null) {
+        projectEnvironment.project.registerService(Javac::class.java, Javac(files, configuration.jvmClasspathRoots, outDir))
+    }
+    //---------------------------------------
 
     private val applicationEnvironment: CoreApplicationEnvironment
         get() = projectEnvironment.environment
