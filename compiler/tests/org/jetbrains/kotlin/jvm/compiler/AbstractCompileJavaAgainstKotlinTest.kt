@@ -60,7 +60,7 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
 
         val analysisResult = JvmResolveUtil.analyze(environment)
         val packageView = analysisResult.moduleDescriptor.getPackage(LoadDescriptorUtil.TEST_PACKAGE_FQNAME)
-        assertFalse("Nothing found in package " + LoadDescriptorUtil.TEST_PACKAGE_FQNAME, packageView.isEmpty())
+        assertFalse("Nothing found in package ${LoadDescriptorUtil.TEST_PACKAGE_FQNAME}", packageView.isEmpty())
 
         val expectedFile = File(ktFilePath.replaceFirst("\\.kt$".toRegex(), ".txt"))
         validateAndCompareDescriptorWithFile(packageView, CONFIGURATION, expectedFile)
@@ -81,10 +81,10 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
         }
         else {
             val mkdirs = outDir.mkdirs()
-            assert(mkdirs) { "Not created: " + outDir }
+            assert(mkdirs) { "Not created: $outDir" }
         }
 
-        return Javac.getInstance(environment.project).use(Javac::compile)
+        return Javac.getInstance(environment.project).use { it.compile() }
     }
 
     companion object {

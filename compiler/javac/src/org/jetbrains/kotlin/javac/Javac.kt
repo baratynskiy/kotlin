@@ -33,10 +33,15 @@ import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.file.JavacFileManager
 import com.sun.tools.javac.jvm.ClassReader
 import com.sun.tools.javac.main.JavaCompiler
+import com.sun.tools.javac.main.Option
 import com.sun.tools.javac.model.JavacElements
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.util.Context
 import com.sun.tools.javac.util.Names
+import com.sun.tools.javac.util.Options
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import com.sun.tools.javac.util.List as JavacList
 import org.jetbrains.kotlin.wrappers.symbols.JavacClass
 import org.jetbrains.kotlin.wrappers.symbols.JavacPackage
@@ -64,6 +69,14 @@ class Javac(private val javaFiles: Collection<File>,
     val JAVA_LANG_OBJECT by lazy { findClassInSymbols(CommonClassNames.JAVA_LANG_OBJECT) }
 
     private val context = Context()
+
+    private val options = Options.instance(context).apply {
+        put(Option.SOURCE, "1.7")
+        put(Option.TARGET, "1.7")
+        put(Option.PROC, "none")
+        put(Option.PROCESSOR, "")
+    }
+
     private val javac = object : JavaCompiler(context) {
         override fun parseFiles(files: Iterable<JavaFileObject>?) = compilationUnits
     }
@@ -94,7 +107,7 @@ class Javac(private val javaFiles: Collection<File>,
         compilationUnits.map { JCPackage(it.packageName.toString(), this) }
     }
 
-    fun compile() = fileManager.setClassPathBeforeCompilation().let {
+    fun compile(messageCollector: MessageCollector? = null) = fileManager.setClassPathBeforeCompilation().let { manager ->
         javac.compile(fileObjects)
         javac.errorCount() == 0
     }
