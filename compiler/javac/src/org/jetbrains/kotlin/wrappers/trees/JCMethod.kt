@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.wrappers.trees
 
 import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
+import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.javac.Javac
 import org.jetbrains.kotlin.load.java.structure.JavaMethod
 import org.jetbrains.kotlin.load.java.structure.JavaType
@@ -40,7 +41,7 @@ class JCMethod<out T : JCTree.JCMethodDecl>(tree: T,
         get() = tree.modifiers.isFinal
 
     override val visibility
-        get() = tree.modifiers.visibility
+        get() = if (containingClass.isInterface) Visibilities.PUBLIC else tree.modifiers.visibility
 
     override val typeParameters
         get() = tree.typeParameters.map { JCTypeParameter(it, TreePath(treePath, it), javac) }

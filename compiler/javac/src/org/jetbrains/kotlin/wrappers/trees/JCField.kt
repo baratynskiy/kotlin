@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.wrappers.trees
 import com.sun.source.util.TreePath
 import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
+import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.javac.Javac
 import org.jetbrains.kotlin.load.java.structure.JavaField
 import org.jetbrains.kotlin.load.java.structure.JavaType
@@ -41,7 +42,7 @@ class JCField<out T : JCTree.JCVariableDecl>(tree: T,
         get() = if (containingClass.isInterface) true else tree.modifiers.isFinal
 
     override val visibility
-        get() = tree.modifiers.visibility
+        get() = if (containingClass.isInterface) Visibilities.PUBLIC else tree.modifiers.visibility
 
     override val isEnumEntry
         get() = tree.modifiers.flags and Flags.ENUM.toLong() != 0L
