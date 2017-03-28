@@ -26,8 +26,9 @@ abstract class JCMember<out T : JCTree>(tree: T,
                                         treePath: TreePath,
                                         javac: Javac) : JCElement<T>(tree, treePath, javac), JavaMember {
 
-    override val containingClass
-        get() = (treePath.parentPath.leaf as JCTree.JCClassDecl).let { JCClass(it, TreePath(treePath, it), javac) }
+    override val containingClass by lazy {
+        (treePath.parentPath.leaf as JCTree.JCClassDecl).let { JCClass(it, TreePath(treePath, it), javac) }
+    }
 
     override val isDeprecatedInJavaDoc = false
 

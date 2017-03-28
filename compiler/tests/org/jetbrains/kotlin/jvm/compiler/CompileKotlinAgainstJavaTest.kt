@@ -196,4 +196,10 @@ class CompileKotlinAgainstJavaTest : AbstractCompileJavaAgainstKotlinTest() {
         doTest(fileName)
     }
 
+    @TestMetadata("InterfaceField.kt")
+    fun testInterfaceField() {
+        val fileName = KotlinTestUtils.navigationMetadata("compiler/testData/compileKotlinAgainstJava/InterfaceField.kt")
+        doTest(fileName)
+    }
+
 }

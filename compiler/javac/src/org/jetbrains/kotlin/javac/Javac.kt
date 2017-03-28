@@ -71,10 +71,8 @@ class Javac(private val javaFiles: Collection<File>,
     private val context = Context()
 
     private val options = Options.instance(context).apply {
-        put(Option.SOURCE, "1.7")
-        put(Option.TARGET, "1.7")
-        put(Option.PROC, "none")
-        put(Option.PROCESSOR, "")
+//        put(Option.SOURCE, "1.7")
+//        put(Option.TARGET, "1.7")
     }
 
     private val javac = object : JavaCompiler(context) {
