@@ -38,7 +38,7 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
         get() = SpecialNames.safeIdentifier(tree.simpleName.toString())
 
     override val annotations: Collection<JavaAnnotation>
-        get() = treePath.annotations.map { JCAnnotation(it, TreePath.getPath(treePath.compilationUnit, it), javac) }
+        get() = emptyList()
 
     override fun findAnnotation(fqName: FqName) = annotations.find { it.classId?.asSingleFqName() == fqName }
 
@@ -89,8 +89,7 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val outerClass
         get() = (treePath.parentPath.leaf as? JCTree.JCClassDecl)?.let { JCClass(it, treePath.parentPath, javac) }
 
-    override val isInterface
-        get() = tree.modifiers.flags and Flags.INTERFACE.toLong() != 0L
+    override val isInterface by lazy { tree.modifiers.flags and Flags.INTERFACE.toLong() != 0L }
 
     override val isAnnotationType
         get() = tree.modifiers.flags and Flags.ANNOTATION.toLong() != 0L
@@ -105,16 +104,16 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
                 .filterIsInstance(JCTree.JCMethodDecl::class.java)
                 .filter { it.kind == Tree.Kind.METHOD }
                 .filter { it.name.toString() != "<init>" }
-                .map { JCMethod(it, TreePath(treePath, it), javac) }
+                .map { JCMethod(it, TreePath(treePath, it), this, javac) }
 
     override val fields
         get() = tree.members
                 .filterIsInstance(JCTree.JCVariableDecl::class.java)
-                .map { JCField(it, TreePath(treePath, it), javac) }
+                .map { JCField(it, TreePath(treePath, it), this, javac) }
 
     override val constructors
         get() = tree.members
                 .filterIsInstance(JCTree.JCMethodDecl::class.java)
                 .filter { TreeInfo.isConstructor(it) }
-                .map { JCConstructor(it, TreePath(treePath, it), javac) }
+                .map { JCConstructor(it, TreePath(treePath, it), this, javac) }
 }

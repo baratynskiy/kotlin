@@ -19,21 +19,20 @@ package org.jetbrains.kotlin.wrappers.trees
 import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.javac.Javac
+import org.jetbrains.kotlin.load.java.structure.JavaAnnotation
+import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaMember
 import org.jetbrains.kotlin.name.FqName
 
 abstract class JCMember<out T : JCTree>(tree: T,
                                         treePath: TreePath,
+                                        override val containingClass: JavaClass,
                                         javac: Javac) : JCElement<T>(tree, treePath, javac), JavaMember {
-
-    override val containingClass by lazy {
-        (treePath.parentPath.leaf as JCTree.JCClassDecl).let { JCClass(it, TreePath(treePath, it), javac) }
-    }
 
     override val isDeprecatedInJavaDoc = false
 
     override val annotations
-        get() = treePath.annotations.map { JCAnnotation(it, TreePath.getPath(treePath.compilationUnit, it), javac) }
+        get() = emptyList<JavaAnnotation>()
 
     override fun findAnnotation(fqName: FqName) = annotations.firstOrNull { it.classId?.asSingleFqName() == fqName }
 

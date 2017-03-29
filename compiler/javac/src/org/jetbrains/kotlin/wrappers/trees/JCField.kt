@@ -21,13 +21,15 @@ import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.javac.Javac
+import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaField
 import org.jetbrains.kotlin.load.java.structure.JavaType
 import org.jetbrains.kotlin.name.Name
 
 class JCField<out T : JCTree.JCVariableDecl>(tree: T,
                                              treePath: TreePath,
-                                             javac: Javac) : JCMember<T>(tree, treePath, javac), JavaField {
+                                             containingClass: JavaClass,
+                                             javac: Javac) : JCMember<T>(tree, treePath, containingClass, javac), JavaField {
 
     override val name
         get() = Name.identifier(tree.name.toString())

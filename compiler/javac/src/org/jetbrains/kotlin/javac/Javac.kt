@@ -39,8 +39,6 @@ import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.util.Context
 import com.sun.tools.javac.util.Names
 import com.sun.tools.javac.util.Options
-import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation
-import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import com.sun.tools.javac.util.List as JavacList
 import org.jetbrains.kotlin.wrappers.symbols.JavacClass
@@ -70,9 +68,11 @@ class Javac(private val javaFiles: Collection<File>,
 
     private val context = Context()
 
-    private val options = Options.instance(context).apply {
-//        put(Option.SOURCE, "1.7")
-//        put(Option.TARGET, "1.7")
+    init {
+        Options.instance(context).apply {
+//            put(Option.SOURCE, "1.7")
+//            put(Option.TARGET, "1.7")
+        }
     }
 
     private val javac = object : JavaCompiler(context) {
@@ -99,13 +99,16 @@ class Javac(private val javaFiles: Collection<File>,
                 .flatMap { unit -> unit.typeDecls.map { unit to it } }
                 .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
                 .flatMap { it.withInnerClasses() }
+                .map { it.fqName to it }
+                .toMap()
     }
 
     private val javaPackages by lazy {
-        compilationUnits.map { JCPackage(it.packageName.toString(), this) }
+        compilationUnits.map { FqName(it.packageName.toString()) to JCPackage(it.packageName.toString(), this) }
+                .toMap()
     }
 
-    fun compile(messageCollector: MessageCollector? = null) = fileManager.setClassPathBeforeCompilation().let { manager ->
+    fun compile(messageCollector: MessageCollector? = null) = fileManager.setClassPathBeforeCompilation().let {
         javac.compile(fileObjects)
         javac.errorCount() == 0
     }
@@ -117,23 +120,25 @@ class Javac(private val javaFiles: Collection<File>,
 
     fun findClass(fqName: FqName, scope: GlobalSearchScope = EverythingGlobalScope()) = when {
         scope is EverythingGlobalScope -> findClass(fqName)
-        scope.contains(AnyJavaSourceVirtualFile) -> javaClasses.find { it.fqName == fqName }
-        else -> findClassInSymbols(fqName.asString()) ?: javaClasses.find { it.fqName == fqName }
+        scope.contains(AnyJavaSourceVirtualFile) -> javaClasses[fqName]
+        else -> findClassInSymbols(fqName.asString()) ?: javaClasses[fqName]
     }
 
     fun findPackage(fqName: FqName, scope: GlobalSearchScope) = when {
         scope is EverythingGlobalScope -> findPackage(fqName)
-        scope.contains(AnyJavaSourceVirtualFile) -> javaPackages.find { it.fqName == fqName }
-        else -> findPackageInSymbols(fqName.asString()) ?: javaPackages.find { it.fqName == fqName }
+        scope.contains(AnyJavaSourceVirtualFile) -> javaPackages[fqName]
+        else -> findPackageInSymbols(fqName.asString()) ?: javaPackages[fqName]
     }
 
     fun findSubPackages(fqName: FqName) = symbols.packages
                                                   .filter { (k, _) -> k.toString().startsWith("$fqName.") }
-                                                  .map { JavacPackage(it.value, this) } + javaPackages
-                                                  .filter { it.fqName.isSubpackageOf(fqName) && it.fqName != fqName }
+                                                  .map { JavacPackage(it.value, this) } +
+                                          javaPackages
+                                                  .filter { it.key.isSubpackageOf(fqName) && it.key != fqName }
+                                                  .map { it.value }
 
-    fun findClassesFromPackage(fqName: FqName) = javaClasses.filter { it.fqName?.parentOrNull() == fqName }
-                                                         .flatMap { it.withInnerClasses() } +
+    fun findClassesFromPackage(fqName: FqName) = javaClasses.filter { it.key?.parentOrNull() == fqName }
+                                                         .flatMap { it.value.withInnerClasses() } +
                                                  elements.getPackageElement(fqName.asString())
                                                          ?.members()
                                                          ?.elements
@@ -145,9 +150,9 @@ class Javac(private val javaFiles: Collection<File>,
 
     private inline fun <reified T> Iterable<T>.toJavacList() = JavacList.from(this)
 
-    private fun findClass(fqName: FqName) = javaClasses.find { it.fqName == fqName } ?: findClassInSymbols(fqName.asString())
+    private fun findClass(fqName: FqName) = javaClasses[fqName] ?: findClassInSymbols(fqName.asString())
 
-    private fun findPackage(fqName: FqName) = javaPackages.find { it.fqName == fqName } ?: findPackageInSymbols(fqName.asString())
+    private fun findPackage(fqName: FqName) = javaPackages[fqName] ?: findPackageInSymbols(fqName.asString())
 
     private fun findClassInSymbols(fqName: String) = elements.getTypeElement(fqName)?.let { JavacClass(it, this) }
 

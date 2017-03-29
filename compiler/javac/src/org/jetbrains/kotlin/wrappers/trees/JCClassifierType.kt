@@ -23,8 +23,6 @@ import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.load.java.structure.*
 import org.jetbrains.kotlin.name.FqName
-import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.name.SpecialNames
 
 abstract class ClassifierType<out T : JCTree>(tree: T,
                                               treePath: TreePath,
@@ -75,9 +73,11 @@ class JCClassifierTypeWithTypeArgument<out T : JCTree.JCTypeApply>(tree: T,
 
 }
 
-private fun getClassifier(treePath: TreePath, javac: Javac) = treePath.resolve(javac).second
-                                                              ?: typeParameter(treePath, javac)
-                                                              ?: createStubClassifier(treePath, javac)
+private fun getClassifier(treePath: TreePath, javac: Javac) = treePath.resolve(javac).let {
+    it.second
+    ?: typeParameter(treePath, javac)
+    ?: createStubClassifier(it.first)
+}
 
 private fun typeParameter(treePath: TreePath, javac: Javac) = treePath
         .filter { it is JCTree.JCClassDecl || it is JCTree.JCMethodDecl }
@@ -94,7 +94,7 @@ private fun typeParameter(treePath: TreePath, javac: Javac) = treePath
                                 javac)
         }
 
-private fun createStubClassifier(treePath: TreePath, javac: Javac) = object : JavaClass {
+private fun createStubClassifier(fqn: FqName) = object : JavaClass {
     override val isAbstract: Boolean
         get() = false
 
@@ -110,8 +110,8 @@ private fun createStubClassifier(treePath: TreePath, javac: Javac) = object : Ja
     override val typeParameters: List<JavaTypeParameter>
         get() = emptyList()
 
-    override val fqName: FqName?
-        get() = treePath.resolve(javac).first
+    override val fqName
+        get() = fqn
 
     override val supertypes: Collection<JavaClassifierType>
         get() = emptyList()
@@ -131,7 +131,7 @@ private fun createStubClassifier(treePath: TreePath, javac: Javac) = object : Ja
     override val isEnum: Boolean
         get() = false
 
-    override val lightClassOriginKind: LightClassOriginKind?
+    override val lightClassOriginKind
         get() = LightClassOriginKind.SOURCE
 
     override val methods: Collection<JavaMethod>
@@ -143,8 +143,8 @@ private fun createStubClassifier(treePath: TreePath, javac: Javac) = object : Ja
     override val constructors: Collection<JavaConstructor>
         get() = emptyList()
 
-    override val name: Name
-        get() = SpecialNames.safeIdentifier(treePath.leaf.toString())
+    override val name
+        get() = fqn.shortNameOrSpecial()
 
     override val annotations
         get() = emptyList<JavaAnnotation>()

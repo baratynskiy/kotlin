@@ -19,12 +19,14 @@ package org.jetbrains.kotlin.wrappers.trees
 import com.sun.source.util.TreePath
 import com.sun.tools.javac.tree.JCTree
 import org.jetbrains.kotlin.javac.Javac
+import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.JavaConstructor
 import org.jetbrains.kotlin.name.Name
 
 class JCConstructor<out T : JCTree.JCMethodDecl>(tree: T,
                                                  treePath: TreePath,
-                                                 javac: Javac) : JCMember<T>(tree, treePath, javac), JavaConstructor {
+                                                 containingClass: JavaClass,
+                                                 javac: Javac) : JCMember<T>(tree, treePath, containingClass, javac), JavaConstructor {
 
     override val name
         get() = Name.identifier(tree.name.toString())
