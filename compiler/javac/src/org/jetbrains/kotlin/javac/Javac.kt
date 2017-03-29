@@ -39,7 +39,6 @@ import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.util.Context
 import com.sun.tools.javac.util.Names
 import com.sun.tools.javac.util.Options
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import com.sun.tools.javac.util.List as JavacList
 import org.jetbrains.kotlin.wrappers.symbols.JavacClass
 import org.jetbrains.kotlin.wrappers.symbols.JavacPackage
@@ -56,7 +55,7 @@ import javax.tools.JavaFileManager
 import javax.tools.JavaFileObject
 import javax.tools.StandardLocation
 
-class Javac(private val javaFiles: Collection<File>,
+class Javac(javaFiles: Collection<File>,
             classPathRoots: List<File>,
             outDir: File?) : Closeable {
 
@@ -70,8 +69,8 @@ class Javac(private val javaFiles: Collection<File>,
 
     init {
         Options.instance(context).apply {
-//            put(Option.SOURCE, "1.7")
-//            put(Option.TARGET, "1.7")
+            put(Option.SOURCE, "1.7")
+            put(Option.TARGET, "1.7")
         }
     }
 
@@ -88,27 +87,24 @@ class Javac(private val javaFiles: Collection<File>,
         }
     }
 
-    private val symbols by lazy { Symtab.instance(context) }
-    private val trees by lazy { JavacTrees.instance(context) }
-    private val elements by lazy { JavacElements.instance(context) }
-    private val fileObjects by lazy { fileManager.getJavaFileObjectsFromFiles(javaFiles).toJavacList() }
-    private val compilationUnits: JavacList<JCTree.JCCompilationUnit> by lazy { fileObjects.map(javac::parse).toJavacList() }
+    private val symbols = Symtab.instance(context)
+    private val trees = JavacTrees.instance(context)
+    private val elements = JavacElements.instance(context)
+    private val fileObjects = fileManager.getJavaFileObjectsFromFiles(javaFiles).toJavacList()
+    private val compilationUnits: JavacList<JCTree.JCCompilationUnit> = fileObjects.map(javac::parse).toJavacList()
 
-    private val javaClasses by lazy {
-        compilationUnits
-                .flatMap { unit -> unit.typeDecls.map { unit to it } }
-                .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
-                .flatMap { it.withInnerClasses() }
-                .map { it.fqName to it }
-                .toMap()
-    }
+    private val javaClasses = compilationUnits
+            .flatMap { unit -> unit.typeDecls.map { unit to it } }
+            .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
+            .flatMap { it.withInnerClasses() }
+            .map { it.fqName to it }
+            .toMap()
 
-    private val javaPackages by lazy {
-        compilationUnits.map { FqName(it.packageName.toString()) to JCPackage(it.packageName.toString(), this) }
-                .toMap()
-    }
+    private val javaPackages = compilationUnits
+            .map { FqName(it.packageName.toString()) to JCPackage(it.packageName.toString(), this) }
+            .toMap()
 
-    fun compile(messageCollector: MessageCollector? = null) = fileManager.setClassPathBeforeCompilation().let {
+    fun compile() = fileManager.setClassPathBeforeCompilation().let {
         javac.compile(fileObjects)
         javac.errorCount() == 0
     }

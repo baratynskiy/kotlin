@@ -20,10 +20,12 @@ import com.intellij.openapi.Disposable
 import org.jetbrains.kotlin.javac.Javac
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.renderer.*
 import org.jetbrains.kotlin.resolve.lazy.JvmResolveUtil
 import org.jetbrains.kotlin.test.ConfigurationKind
+import org.jetbrains.kotlin.test.KotlinTestUtils
 import org.jetbrains.kotlin.test.TestCaseWithTmpdir
 import org.jetbrains.kotlin.test.TestJdkKind
 import org.junit.Assert
@@ -45,10 +47,13 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
 
         val javaErrorFile = File(ktFilePath.replaceFirst("\\.kt$".toRegex(), ".javaerr.txt"))
 
+        val useJavac = true
+
         val out = File(tmpdir, "out")
         val compiledSuccessfully = compileKotlinWithJava(listOf(javaFile),
-                                                        listOf(ktFile),
-                                                        out, testRootDisposable, javaErrorFile)
+                                                         listOf(ktFile),
+                                                         out, testRootDisposable, javaErrorFile,
+                                                         useJavac)
         if (!compiledSuccessfully) return
 
         val environment = KotlinCoreEnvironment.createForTests(
@@ -56,6 +61,8 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
                 newConfiguration(ConfigurationKind.ALL, TestJdkKind.MOCK_JDK, getAnnotationsJar(), out),
                 EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
+
+        environment.configuration.put(JVMConfigurationKeys.USE_JAVAC, useJavac)
         environment.registerJavac(emptyList<File>(), out)
 
         val analysisResult = JvmResolveUtil.analyze(environment)
@@ -72,9 +79,11 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
             ktFiles: List<File>,
             outDir: File,
             disposable: Disposable,
-            javaErrorFile: File?
+            javaErrorFile: File?,
+            useJavac: Boolean
     ): Boolean {
         val environment = createEnvironmentWithMockJdkAndIdeaAnnotations(disposable)
+        environment.configuration.put(JVMConfigurationKeys.USE_JAVAC, useJavac)
         environment.registerJavac(javaFiles, outDir)
         if (!ktFiles.isEmpty()) {
             LoadDescriptorUtil.compileKotlinToDirAndGetModule(ktFiles, outDir, environment)
@@ -84,7 +93,10 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
             assert(mkdirs) { "Not created: $outDir" }
         }
 
-        return Javac.getInstance(environment.project).use { it.compile() }
+        if (useJavac)
+            return Javac.getInstance(environment.project).use(Javac::compile)
+        else
+            return KotlinTestUtils.compileKotlinWithJava(javaFiles, ktFiles, outDir, disposable, javaErrorFile)
     }
 
     companion object {

@@ -26,11 +26,6 @@ import org.jetbrains.kotlin.wrappers.trees.computeClassId
 
 abstract class JavacVirtualFileFinder : VirtualFileFinder() {
 
-    override fun findKotlinClass(classId: ClassId): KotlinJvmBinaryClass? {
-        val file = findVirtualFileWithHeader(classId) ?: return null
-        return KotlinBinaryClassCache.getKotlinBinaryClass(file)
-    }
-
     override fun findKotlinClass(javaClass: JavaClass): KotlinJvmBinaryClass? {
         var file = javaClass.computeClassId()?.let(this::findVirtualFileWithHeader) ?: return null
 

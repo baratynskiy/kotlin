@@ -75,6 +75,7 @@ class JCClassifierTypeWithTypeArgument<out T : JCTree.JCTypeApply>(tree: T,
 
 private fun getClassifier(treePath: TreePath, javac: Javac) = treePath.resolve(javac).let {
     it.second
+    ?: stubs[it.first]
     ?: typeParameter(treePath, javac)
     ?: createStubClassifier(it.first)
 }
@@ -93,6 +94,8 @@ private fun typeParameter(treePath: TreePath, javac: Javac) = treePath
                                 javac.getTreePath(it, treePath.compilationUnit),
                                 javac)
         }
+
+private val stubs = hashMapOf<FqName, JavaClass>()
 
 private fun createStubClassifier(fqn: FqName) = object : JavaClass {
     override val isAbstract: Boolean
@@ -154,4 +157,4 @@ private fun createStubClassifier(fqn: FqName) = object : JavaClass {
 
     override fun findAnnotation(fqName: FqName) = null
 
-}
+}.also { stubs[fqn] = it }
