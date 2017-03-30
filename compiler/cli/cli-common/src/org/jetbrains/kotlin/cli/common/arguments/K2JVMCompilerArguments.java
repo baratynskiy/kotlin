@@ -112,7 +112,7 @@ public class K2JVMCompilerArguments extends CommonCompilerArguments {
     public boolean loadBuiltInsFromDependencies;
 
     // Javac options
-    @Argument(value = "use-javac", description = "Use Javac analysis")
+    @Argument(value = "Xuse-javac", description = "Use Javac analysis")
     public boolean useJavac;
 
     // Paths to output directories for friend modules.
