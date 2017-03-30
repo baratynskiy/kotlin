@@ -82,6 +82,10 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
             javaErrorFile: File?,
             useJavac: Boolean
     ): Boolean {
+        if (!useJavac) {
+            return KotlinTestUtils.compileKotlinWithJava(javaFiles, ktFiles, outDir, disposable, javaErrorFile)
+        }
+
         val environment = createEnvironmentWithMockJdkAndIdeaAnnotations(disposable)
         environment.configuration.put(JVMConfigurationKeys.USE_JAVAC, useJavac)
         environment.registerJavac(javaFiles, outDir)
@@ -93,10 +97,7 @@ abstract class AbstractCompileJavaAgainstKotlinTest : TestCaseWithTmpdir() {
             assert(mkdirs) { "Not created: $outDir" }
         }
 
-        if (useJavac)
-            return Javac.getInstance(environment.project).use(Javac::compile)
-        else
-            return KotlinTestUtils.compileKotlinWithJava(javaFiles, ktFiles, outDir, disposable, javaErrorFile)
+        return Javac.getInstance(environment.project).use(Javac::compile)
     }
 
     companion object {

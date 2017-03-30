@@ -70,6 +70,7 @@ import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.STRONG_WARNING
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.common.toBooleanLenient
 import org.jetbrains.kotlin.cli.jvm.JvmRuntimeVersionsConsistencyChecker
 import org.jetbrains.kotlin.cli.jvm.config.*
@@ -231,8 +232,12 @@ class KotlinCoreEnvironment private constructor(
                 .flatMap { it.javaFiles }
                 .map { File(it.canonicalPath) }
 
-    fun registerJavac(files: List<File> = javaFiles, outDir: File? = null) {
-        projectEnvironment.project.registerService(Javac::class.java, Javac(files, configuration.jvmClasspathRoots, outDir))
+    fun registerJavac(files: List<File> = javaFiles,
+                      outDir: File? = null,
+                      messageCollector: MessageCollector? = null) {
+        projectEnvironment.project.registerService(Javac::class.java, Javac(files,
+                                                                            configuration.jvmClasspathRoots,
+                                                                            outDir, messageCollector))
     }
     //---------------------------------------
 

@@ -190,7 +190,7 @@ class K2JVMCompiler : CLICompiler<K2JVMCompilerArguments>() {
 
                 if (arguments.useJavac) {
                     environment.configuration.put(JVMConfigurationKeys.USE_JAVAC, true)
-                    environment.registerJavac(outDir = File(destination))
+                    environment.registerJavac(outDir = File(destination), messageCollector = messageCollector)
                 }
                 else
                     environment.configuration.put(JVMConfigurationKeys.USE_JAVAC, false)
@@ -206,7 +206,8 @@ class K2JVMCompiler : CLICompiler<K2JVMCompilerArguments>() {
                 KotlinToJVMBytecodeCompiler.compileBunchOfSources(environment)
 
                 if (arguments.useJavac) {
-                    Javac.getInstance(environment.project).use(Javac::compile)
+                    val success = Javac.getInstance(environment.project).use(Javac::compile)
+                    if (!success) return COMPILATION_ERROR
                 }
             }
 

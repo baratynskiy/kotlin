@@ -39,6 +39,9 @@ import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.util.Context
 import com.sun.tools.javac.util.Names
 import com.sun.tools.javac.util.Options
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import com.sun.tools.javac.util.List as JavacList
 import org.jetbrains.kotlin.wrappers.symbols.JavacClass
 import org.jetbrains.kotlin.wrappers.symbols.JavacPackage
@@ -57,7 +60,8 @@ import javax.tools.StandardLocation
 
 class Javac(javaFiles: Collection<File>,
             classPathRoots: List<File>,
-            outDir: File?) : Closeable {
+            outDir: File?,
+            private val messageCollector: MessageCollector? = null) : Closeable {
 
     companion object {
         fun getInstance(project: Project): Javac = ServiceManager.getService(project, Javac::class.java)
@@ -68,9 +72,11 @@ class Javac(javaFiles: Collection<File>,
     private val context = Context()
 
     init {
+        messageCollector?.let { JavacLogger.preRegister(context, it) }
+        
         Options.instance(context).apply {
-            put(Option.SOURCE, "1.7")
-            put(Option.TARGET, "1.7")
+//            put(Option.SOURCE, "1.7")
+//            put(Option.TARGET, "1.7")
         }
     }
 
@@ -105,6 +111,11 @@ class Javac(javaFiles: Collection<File>,
             .toMap()
 
     fun compile() = fileManager.setClassPathBeforeCompilation().let {
+        if (javac.errorCount() > 0) return false
+        messageCollector?.report(CompilerMessageSeverity.INFO,
+                                 "Compiling Java sources",
+                                 CompilerMessageLocation.NO_LOCATION)
+
         javac.compile(fileObjects)
         javac.errorCount() == 0
     }
