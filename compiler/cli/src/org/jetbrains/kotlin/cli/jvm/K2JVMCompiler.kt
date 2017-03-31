@@ -190,10 +190,11 @@ class K2JVMCompiler : CLICompiler<K2JVMCompilerArguments>() {
 
                 if (arguments.useJavac) {
                     environment.configuration.put(JVMConfigurationKeys.USE_JAVAC, true)
-                    environment.registerJavac(outDir = File(destination), messageCollector = messageCollector)
+                    environment.registerJavac(outDir = File(destination),
+                                              messageCollector = messageCollector,
+                                              arguments = arguments.javacArguments)
                 }
-                else
-                    environment.configuration.put(JVMConfigurationKeys.USE_JAVAC, false)
+                else environment.configuration.put(JVMConfigurationKeys.USE_JAVAC, false)
 
                 if (environment.getSourceFiles().isEmpty()) {
                     if (arguments.version) {

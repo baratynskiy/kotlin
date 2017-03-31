@@ -33,7 +33,6 @@ import com.sun.tools.javac.code.Symtab
 import com.sun.tools.javac.file.JavacFileManager
 import com.sun.tools.javac.jvm.ClassReader
 import com.sun.tools.javac.main.JavaCompiler
-import com.sun.tools.javac.main.Option
 import com.sun.tools.javac.model.JavacElements
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.util.Context
@@ -61,7 +60,8 @@ import javax.tools.StandardLocation
 class Javac(javaFiles: Collection<File>,
             classPathRoots: List<File>,
             outDir: File?,
-            private val messageCollector: MessageCollector? = null) : Closeable {
+            private val messageCollector: MessageCollector?,
+            arguments: Array<String>?) : Closeable {
 
     companion object {
         fun getInstance(project: Project): Javac = ServiceManager.getService(project, Javac::class.java)
@@ -73,11 +73,7 @@ class Javac(javaFiles: Collection<File>,
 
     init {
         messageCollector?.let { JavacLogger.preRegister(context, it) }
-        
-        Options.instance(context).apply {
-//            put(Option.SOURCE, "1.7")
-//            put(Option.TARGET, "1.7")
-        }
+        arguments?.toList()?.let { JavacOptionsMapper.map(Options.instance(context), it) }
     }
 
     private val javac = object : JavaCompiler(context) {

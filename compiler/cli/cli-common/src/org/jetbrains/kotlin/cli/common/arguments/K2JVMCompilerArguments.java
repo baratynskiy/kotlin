@@ -115,6 +115,10 @@ public class K2JVMCompilerArguments extends CommonCompilerArguments {
     @Argument(value = "Xuse-javac", description = "Use Javac analysis")
     public boolean useJavac;
 
+    @Argument(value = "Xjavac-arguments", description = "Java compiler arguments")
+    @ValueDescription("<option[,]>")
+    public String[] javacArguments;
+
     // Paths to output directories for friend modules.
     public String[] friendPaths;
 
