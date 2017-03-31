@@ -57,13 +57,12 @@ class JCClass<out T : JCTree.JCClassDecl>(tree: T,
     override val typeParameters
         get() = tree.typeParameters.map { JCTypeParameter(it, TreePath(treePath, it), javac) }
 
-    override val fqName
-        get() = treePath.reversed()
-                .joinToString(separator = ".") {
-                    (it as? JCTree.JCCompilationUnit)?.packageName?.toString()
-                    ?: (it as JCTree.JCClassDecl).name
-                }
-                .let(::FqName)
+    override val fqName = treePath.reversed()
+            .joinToString(separator = ".") {
+                (it as? JCTree.JCCompilationUnit)?.packageName?.toString()
+                ?: (it as JCTree.JCClassDecl).name
+            }
+            .let(::FqName)
 
     override val supertypes
         get() = arrayListOf<JavaClassifierType>().apply {

@@ -16,39 +16,32 @@
 
 package org.jetbrains.kotlin.wrappers.symbols
 
-import com.sun.tools.javac.jvm.ClassReader
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.load.java.JavaVisibilities
 import javax.lang.model.element.Element
 import javax.lang.model.element.Modifier
 
 val Element.isAbstract
-        get() = safeModifiers().contains(Modifier.ABSTRACT)
+        get() = modifiers.contains(Modifier.ABSTRACT)
 
 val Element.isStatic
-        get() = safeModifiers().contains(Modifier.STATIC)
+        get() = modifiers.contains(Modifier.STATIC)
 
 val Element.isFinal
-        get() = safeModifiers().contains(Modifier.FINAL)
+        get() = modifiers.contains(Modifier.FINAL)
 
-fun Element.getVisibility() = when {
-    safeModifiers().contains(Modifier.PUBLIC) -> Visibilities.PUBLIC
-    safeModifiers().contains(Modifier.PRIVATE) -> Visibilities.PRIVATE
-    safeModifiers().contains(Modifier.PROTECTED) -> {
-        if (safeModifiers().contains(Modifier.STATIC)) {
-            JavaVisibilities.PROTECTED_STATIC_VISIBILITY
-        } else {
-            JavaVisibilities.PROTECTED_AND_PACKAGE
+fun Element.getVisibility() = with(modifiers) {
+    when {
+        contains(Modifier.PUBLIC) -> Visibilities.PUBLIC
+        contains(Modifier.PRIVATE) -> Visibilities.PRIVATE
+        contains(Modifier.PROTECTED) -> {
+            if (contains(Modifier.STATIC)) {
+                JavaVisibilities.PROTECTED_STATIC_VISIBILITY
+            }
+            else {
+                JavaVisibilities.PROTECTED_AND_PACKAGE
+            }
         }
-    }
-    else -> JavaVisibilities.PACKAGE_VISIBILITY
-}
-
-// get modifiers in a safe way
-private fun Element.safeModifiers(): Set<Modifier> {
-    try {
-        return modifiers
-    } catch (ex: ClassReader.BadClassFile) {
-        return emptySet()
+        else -> JavaVisibilities.PACKAGE_VISIBILITY
     }
 }
