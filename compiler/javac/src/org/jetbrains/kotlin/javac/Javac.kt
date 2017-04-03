@@ -96,9 +96,9 @@ class Javac(javaFiles: Collection<File>,
     private val compilationUnits: JavacList<JCTree.JCCompilationUnit> = fileObjects.map(javac::parse).toJavacList()
 
     private val javaClasses = compilationUnits
-            .flatMap { unit -> unit.typeDecls.map { unit to it } }
-            .map { JCClass(it.second as JCTree.JCClassDecl, trees.getPath(it.first, it.second), this) }
-            .flatMap { it.withInnerClasses() }
+            .flatMap { unit -> unit.typeDecls
+                    .flatMap { JCClass(it as JCTree.JCClassDecl, trees.getPath(unit, it), this).withInnerClasses() }
+            }
             .map { it.fqName to it }
             .toMap()
 
@@ -106,14 +106,15 @@ class Javac(javaFiles: Collection<File>,
             .map { FqName(it.packageName.toString()) to JCPackage(it.packageName.toString(), this) }
             .toMap()
 
-    fun compile() = fileManager.setClassPathBeforeCompilation().let {
-        if (javac.errorCount() > 0) return false
+    fun compile() = with(javac) {
+        if (errorCount() > 0) return false
+
+        fileManager.setClassPathForCompilation()
         messageCollector?.report(CompilerMessageSeverity.INFO,
                                  "Compiling Java sources",
                                  CompilerMessageLocation.NO_LOCATION)
-
-        javac.compile(fileObjects)
-        javac.errorCount() == 0
+        compile(fileObjects)
+        errorCount() == 0
     }
 
     override fun close() {
@@ -122,13 +123,13 @@ class Javac(javaFiles: Collection<File>,
     }
 
     fun findClass(fqName: FqName, scope: GlobalSearchScope = EverythingGlobalScope()) = when {
-        scope is EverythingGlobalScope -> findClass(fqName)
+        scope is EverythingGlobalScope -> javaClasses[fqName] ?: findClassInSymbols(fqName.asString())
         scope.contains(AnyJavaSourceVirtualFile) -> javaClasses[fqName]
         else -> findClassInSymbols(fqName.asString()) ?: javaClasses[fqName]
     }
 
     fun findPackage(fqName: FqName, scope: GlobalSearchScope) = when {
-        scope is EverythingGlobalScope -> findPackage(fqName)
+        scope is EverythingGlobalScope -> javaPackages[fqName] ?: findPackageInSymbols(fqName.asString())
         scope.contains(AnyJavaSourceVirtualFile) -> javaPackages[fqName]
         else -> findPackageInSymbols(fqName.asString()) ?: javaPackages[fqName]
     }
@@ -153,15 +154,11 @@ class Javac(javaFiles: Collection<File>,
 
     private inline fun <reified T> Iterable<T>.toJavacList() = JavacList.from(this)
 
-    private fun findClass(fqName: FqName) = javaClasses[fqName] ?: findClassInSymbols(fqName.asString())
-
-    private fun findPackage(fqName: FqName) = javaPackages[fqName] ?: findPackageInSymbols(fqName.asString())
-
     private fun findClassInSymbols(fqName: String) = elements.getTypeElement(fqName)?.let { JavacClass(it, this) }
 
     private fun findPackageInSymbols(fqName: String) = elements.getPackageElement(fqName)?.let { JavacPackage(it, this) }
 
-    private fun JavacFileManager.setClassPathBeforeCompilation() = apply {
+    private fun JavacFileManager.setClassPathForCompilation() = apply {
         setLocation(StandardLocation.CLASS_PATH,
                     getLocation(StandardLocation.CLASS_PATH) + getLocation(StandardLocation.CLASS_OUTPUT))
 
